@@ -1,7 +1,6 @@
 package com.ktk.workhuservice.controllers;
 
 import com.ktk.workhuservice.data.paceteam.PaceTeamService;
-import com.ktk.workhuservice.data.users.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/paceTeams")
 public class PaceTeamController {
 
-    private PaceTeamService paceTeamService;
+    private final PaceTeamService paceTeamService;
 
-    public PaceTeamController(PaceTeamService teamService, UserService userService) {
+    public PaceTeamController(PaceTeamService teamService) {
         this.paceTeamService = teamService;
     }
 

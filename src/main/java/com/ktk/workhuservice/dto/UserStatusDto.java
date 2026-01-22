@@ -25,4 +25,6 @@ public class UserStatusDto {
 
     private boolean onTrack;
 
+    private boolean localOnTrack;
+
 }

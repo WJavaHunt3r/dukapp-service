@@ -58,12 +58,11 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
             status.setGoal(goal);
             status.setSeason(season);
             calculateUserStatus(status);
-            save(status);
         }
     }
 
-    public void calculateUserStatus(User u) {
-        findByUserId(u.getId()).ifPresent(this::calculateUserStatus);
+    public void calculateUserStatus(User u, Integer goal) {
+        findByUserId(u.getId()).ifPresentOrElse(this::calculateUserStatus, () -> createUserStatus(u, goal, seasonService.findCurrentSeason()));
     }
 
     public void calculateUserStatus(UserStatus us) {
@@ -85,6 +84,7 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         us.setStatus((double) transactions / us.getGoal());
         us.setTransactions(transactions);
         us.setTransition(Math.max(us.getTransactions() - us.getGoal(), 0));
+        save(us);
     }
 
     @Override

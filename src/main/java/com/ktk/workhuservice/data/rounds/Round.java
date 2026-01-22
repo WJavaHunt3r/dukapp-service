@@ -1,6 +1,7 @@
 package com.ktk.workhuservice.data.rounds;
 
 import com.ktk.workhuservice.data.BaseEntity;
+import com.ktk.workhuservice.data.paceteam.PaceTeam;
 import com.ktk.workhuservice.data.seasons.Season;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,9 @@ public class Round extends BaseEntity<Round, Long> {
     @Column(name = "MYSHARE_GOAL")
     @NotNull
     private Double myShareGoal;
+
+    @Column(name = "LOCAL_MYSHARE_GOAL")
+    private Double localMyShareGoal;
 
     @Column(name = "SAMVIRK_GOAL")
     @NotNull
@@ -61,6 +65,10 @@ public class Round extends BaseEntity<Round, Long> {
 
     @Column(name = "ACTIVE_ROUND", columnDefinition = "boolean default true")
     private Boolean activeRound;
+
+    @JoinColumn(name = "WINNER_TEAM")
+    @ManyToOne
+    private PaceTeam winnerTeam;
 
 
 }

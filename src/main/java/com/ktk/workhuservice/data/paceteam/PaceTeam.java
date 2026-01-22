@@ -38,8 +38,19 @@ public class PaceTeam extends BaseEntity<PaceTeam, Long> {
     @Size(max = 10)
     private String color;
 
+    @Column(name = "START_COLOR", length = 10)
+    @Size(max = 10)
+    private String startColor;
+
+    @Column(name = "END_COLOR", length = 10)
+    @Size(max = 10)
+    private String endColor;
+
     @Column(name = "ICON_ASSET_PATH")
     @Size(max = 50)
     private String iconAssetPath;
 
+    public void addCoins(Double coins){
+        this.coins += coins;
+    }
 }

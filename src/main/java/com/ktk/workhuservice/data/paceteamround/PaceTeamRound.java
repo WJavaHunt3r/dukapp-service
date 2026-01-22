@@ -34,4 +34,13 @@ public class PaceTeamRound extends BaseEntity<PaceTeamRound, Long> {
 
     @Column(name = "TEAM_ROUND_STATUS", columnDefinition = "float8 default 0")
     private double teamRoundStatus;
+
+    @Column(name = "TEAM_HOURS", columnDefinition = "float8 default 0")
+    private Double teamHours;
+
+    @Column(name = "ON_TRACK", columnDefinition = "integer default 0")
+    private Integer onTrack;
+
+    @Column(name = "PAYMENTS", columnDefinition = "integer default 0")
+    private Integer payments;
 }

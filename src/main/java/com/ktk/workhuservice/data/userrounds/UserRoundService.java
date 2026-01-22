@@ -112,11 +112,11 @@ public class UserRoundService extends BaseService<UserRound, Long> {
             String myShareOnTrackName = "MyShare On Track Round " + round.getRoundNumber() + "(" + round.getSeason().getSeasonYear() + ")";
             String samvirkOnTrackName = "Samvirk On Track Round " + round.getRoundNumber() + "(" + round.getSeason().getSeasonYear() + ")";
 
-            if (!userRound.isMyShareOnTrackPoints() && goal > 0 && ((double) user.getCurrentMyShareCredit() / goal) * 100 >= round.getMyShareGoal()) {
+            if (!userRound.isMyShareOnTrackPoints() && goal > 0 && ((double) user.getCurrentMyShareCredit() / goal) * 100 >= round.getLocalMyShareGoal()) {
                 userRound.setMyShareOnTrackPoints(true);
                 myShareOnTrackItems.add(createOnTrackTransactionItem(user, round, myShareOnTrackName, 50));
                 points += 50;
-            } else if (userRound.isMyShareOnTrackPoints() && goal > 0 && ((double) user.getCurrentMyShareCredit() / goal) * 100 < round.getMyShareGoal()) {
+            } else if (userRound.isMyShareOnTrackPoints() && goal > 0 && ((double) user.getCurrentMyShareCredit() / goal) * 100 < round.getLocalMyShareGoal()) {
                 userRound.setMyShareOnTrackPoints(false);
                 myShareOnTrackItems.add(createOnTrackTransactionItem(user, round, myShareOnTrackName + " revert", -50));
                 points -= 50;

@@ -10,7 +10,7 @@ import org.springframework.security.provisioning.UserDetailsManager;
 public class WorkHuDetailsManager implements UserDetailsManager, UserDetailsPasswordService {
     private UserService userService;
 
-    public WorkHuDetailsManager(UserService userService) {
+    public  WorkHuDetailsManager(UserService userService) {
         this.userService = userService;
     }
 

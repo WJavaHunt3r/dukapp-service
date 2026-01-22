@@ -5,6 +5,7 @@ import com.ktk.workhuservice.data.payments.PaymentsService;
 import com.ktk.workhuservice.data.users.User;
 import com.ktk.workhuservice.data.users.UserService;
 import com.ktk.workhuservice.dto.PaymentDto;
+import com.ktk.workhuservice.enums.PaymentGoal;
 import com.ktk.workhuservice.enums.PaymentStatus;
 import com.ktk.workhuservice.mapper.PaymentMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +28,13 @@ public class PaymentsController {
     @GetMapping
     public ResponseEntity<?> getPayments(@Nullable @RequestParam("userId") Long userId,
                                          @Nullable @RequestParam("status") PaymentStatus status,
-                                         @Nullable @RequestParam("donationId") Long donationId) {
-        return ResponseEntity.status(200).body(paymentService.fetchByQuery(status, userId, donationId).stream().map(paymentMapper::entityToDto));
+                                         @Nullable @RequestParam("checkoutId") String checkoutId,
+                                         @Nullable @RequestParam("checkoutReference") String checkoutReference,
+                                         @Nullable @RequestParam("donationId") Long donationId,
+                                         @Nullable @RequestParam("dateFrom") String dateFrom,
+                                         @Nullable @RequestParam("dateTo") String dateTo,
+                                         @Nullable @RequestParam("paymentGoal") PaymentGoal paymentGoal) {
+        return ResponseEntity.status(200).body(paymentService.fetchByQuery(status, userId, donationId, checkoutId, checkoutReference, dateFrom, dateTo, paymentGoal).stream().map(paymentMapper::entityToDto));
     }
 
     @GetMapping("/{id}")
@@ -70,7 +76,7 @@ public class PaymentsController {
 
     @DeleteMapping("/{paymentId}")
     public ResponseEntity<?> deletePayment(@PathVariable Long paymentId) {
-        if (paymentService.findById(paymentId).isPresent()) {
+        if (paymentService.findById(paymentId).isEmpty()) {
             return ResponseEntity.status(400).body("Invalid paymentId");
         }
         paymentService.deleteById(paymentId);

@@ -69,7 +69,11 @@ public class MicrosoftUtils {
 
         var row3 = sheet.getRow(3);
         row3.getCell(2).setCellValue(activity.getResponsible().getFullName());
-        row3.getCell(5).setCellValue(activity.getTransactionType().equals(TransactionType.HOURS) || activity.getTransactionType().equals(TransactionType.DUKA_MUNKA_2000) ? fullHours * 2000 : activity.getTransactionType().equals(TransactionType.DUKA_MUNKA) ? fullHours * 1000 : 0);
+        row3.getCell(5).setCellValue(
+                activity.getTransactionType().equals(TransactionType.HOURS) ? fullHours * 3000 :
+                        activity.getTransactionType().equals(TransactionType.DUKA_MUNKA_2000) ? fullHours * 2000 :
+                                activity.getTransactionType().equals(TransactionType.DUKA_MUNKA) ? fullHours * 1000 : 0
+        );
         row3.getCell(5).setCellStyle(style);
 
         for (int i = 0; i < registrations.size(); i++) {
@@ -80,7 +84,11 @@ public class MicrosoftUtils {
             currRow.createCell(2).setCellValue(reg.getUser().getFullName());
             currRow.getCell(3).setCellValue(reg.getUser().getAge());
             currRow.getCell(4).setCellValue(reg.getHours());
-            currRow.getCell(5).setCellValue(activity.getTransactionType().equals(TransactionType.HOURS) || activity.getTransactionType().equals(TransactionType.DUKA_MUNKA_2000) ? reg.getHours() * 2000 : activity.getTransactionType().equals(TransactionType.DUKA_MUNKA) ? reg.getHours() * 1000 : 0);
+            currRow.getCell(5).setCellValue(
+                    activity.getTransactionType().equals(TransactionType.HOURS) ? reg.getHours() * 3000 :
+                    activity.getTransactionType().equals(TransactionType.DUKA_MUNKA_2000) ? reg.getHours() * 2000 :
+                            activity.getTransactionType().equals(TransactionType.DUKA_MUNKA) ? reg.getHours() * 1000 : 0
+            );
             currRow.getCell(5).setCellStyle(style);
         }
 

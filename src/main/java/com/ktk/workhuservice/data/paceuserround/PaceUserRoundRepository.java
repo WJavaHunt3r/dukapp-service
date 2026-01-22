@@ -40,4 +40,7 @@ public interface PaceUserRoundRepository extends JpaRepository<PaceUserRound, Lo
             " AND ( ur.round.season.seasonYear = ?3 OR ?3 IS NULL) " +
             " AND ( ur.user.paceTeam.id = ?4 OR ?4 IS NULL) ")
     List<PaceUserRound> findByQuery(Long userId, Long roundId, Integer seasonYear, Long paceTeamId);
+
+    @Query("SELECT count(ur) FROM PaceUserRound ur WHERE ur.round = ?2 and ur.user.paceTeam = ?1 AND ur.onTrack = true ")
+    Integer countOnTrackByTeamAndRound(PaceTeam team, Round round);
 }

@@ -84,7 +84,7 @@ public class MicrosoftService {
     private String createContent(Activity activity, double sumHours) {
         String date = MicrosoftUtils.formatDate(activity.getActivityDateTime().toLocalDate());
         return "Kedves " + activity.getEmployer().getFullName() + "!\n\n" + date +
-                " dátummal egy munka került rögzítésre rendszerünkbe. A munka részleteit a csatolt munkalapon láthatod.\n\nAz elvégzett munka utáni befizetendő összeg: " + (int) (sumHours * 2000) +
+                " dátummal egy munka került rögzítésre rendszerünkbe. A munka részleteit a csatolt munkalapon láthatod.\n\nAz elvégzett munka utáni befizetendő összeg: " + (int) (sumHours * 3000) +
                 "Ft\n\nKérjük, a befizetendő összeget a MyShare számlára utald el!\nSzámlaszám: 10700323-43750203-52000001\nKözlemény: " + date.replace(".", "") + "_" + activity.getEmployer().getFullName()
                 + "\n\nHa már utaltál, akkor tekintsd tárgytalannak az emailt. Kérdés esetén erre az email-re válaszolva veheted fel velünk a kapcsolatot. \n\nÜdvözlettel, \nMyShare csapat";
 
@@ -128,7 +128,7 @@ public class MicrosoftService {
         additionalData.put("EmployerLookupId", teamsLookUpId);
         additionalData.put("Activitydate", activity.getActivityDateTime().toString());
         additionalData.put("Hours", String.valueOf(sumHours));
-        additionalData.put("MySharecredits", String.valueOf(sumHours * 2000));
+        additionalData.put("MySharecredits", String.valueOf(sumHours * 3000));
         additionalData.put("WorkId", String.valueOf(activity.getId()));
     }
 

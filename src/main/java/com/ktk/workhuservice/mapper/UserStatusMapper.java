@@ -19,6 +19,7 @@ public class UserStatusMapper extends BaseMapper<UserStatus, UserStatusDto> {
     public UserStatusDto entityToDto(UserStatus entity) {
         UserStatusDto dto = modelMapper.map(entity, UserStatusDto.class);
         dto.setOnTrack(entity.getStatus() * 100 >= roundService.getLastRound().getMyShareGoal());
+        dto.setLocalOnTrack(entity.getStatus() * 100 >= roundService.getLastRound().getLocalMyShareGoal());
         return dto;
     }
 

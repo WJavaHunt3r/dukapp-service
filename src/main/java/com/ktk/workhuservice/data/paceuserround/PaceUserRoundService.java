@@ -3,6 +3,7 @@ package com.ktk.workhuservice.data.paceuserround;
 import com.ktk.workhuservice.data.paceteam.PaceTeam;
 import com.ktk.workhuservice.data.rounds.Round;
 import com.ktk.workhuservice.data.rounds.RoundService;
+import com.ktk.workhuservice.data.seasons.Season;
 import com.ktk.workhuservice.data.transactionitems.TransactionItem;
 import com.ktk.workhuservice.data.transactionitems.TransactionItemService;
 import com.ktk.workhuservice.data.transactions.Transaction;
@@ -54,6 +55,10 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         return repository.findByUserAndRound(u, r);
     }
 
+    public Integer countOnTrackByTeamAndRound(PaceTeam team, Round round) {
+        return repository.countOnTrackByTeamAndRound(team, round);
+    }
+
     public int countByRoundAndTeam(Round r, PaceTeam t) {
         return repository.countByRoundAndTeam(r, t);
     }
@@ -91,7 +96,13 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
     }
 
     public void createPaceUserRound(User u) {
-        save(createPaceUserRound(u, roundService.getLastRound()));
+        var usr = findByUserAndRound(u, roundService.getLastRound());
+        if (usr.isPresent()) {
+            calculateUserRoundStatus(usr.get());
+            save(usr.get());
+        } else {
+            save(createPaceUserRound(u, roundService.getLastRound()));
+        }
     }
 
     private PaceUserRound createPaceUserRound(User u, Round round) {
@@ -108,36 +119,26 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
 
     private int calculateCurrRoundMyShareGoal(Round round, User u) {
         Optional<UserStatus> us = userStatusService.findByUserId(u.getId(), round.getSeason().getSeasonYear());
-        return us.map(userStatus -> Math.max(0, (int) Math.round(userStatus.getGoal() * (round.getMyShareGoal() / 100)) - userStatus.getTransactions())).orElse(0);
+        return us.map(userStatus -> Math.max(0, (int) Math.round(userStatus.getGoal() * (round.getLocalMyShareGoal() / 100)) - userStatus.getTransactions())).orElse(0);
     }
 
     private void calculateUserRoundStatus(PaceUserRound pur) {
         pur.setRoundMyShareGoal(calculateCurrRoundMyShareGoal(pur.getRound(), pur.getUser()));
         pur.setRoundCoins(0.0);
+        Optional<UserStatus> us1 = userStatusService.findByUserId(pur.getUser().getId(), pur.getRound().getSeason().getSeasonYear());
+        us1.ifPresent(userStatusService::calculateUserStatus);
         Optional<UserStatus> us = userStatusService.findByUserId(pur.getUser().getId(), pur.getRound().getSeason().getSeasonYear());
         String myShareOnTrackName = "MyShare On Track " + pur.getRound().getRoundNumber() + ". hét (" + pur.getRound().getSeason().getSeasonYear() + ")";
-        if(pur.getRound() == roundService.getLastRound() && us.isPresent()){
-            if (us.get().getStatus() * 100 >= pur.getRound().getMyShareGoal() && !pur.isMyShareOnTrackPoints()) {
+        if (pur.getRound() == roundService.getLastRound() && us.isPresent()) {
+            if (us.get().getStatus() * 100 >= pur.getRound().getLocalMyShareGoal() && !pur.isMyShareOnTrackPoints()) {
                 pur.setOnTrack(true);
-                if (!pur.isMyShareOnTrackPoints()) {
-                    saveOnTrackItems(createOnTrackTransactionItem(pur.getUser(), pur.getRound(), myShareOnTrackName, 10), myShareOnTrackName);
-                    pur.setMyShareOnTrackPoints(true);
-                }
-            } else if (us.get().getStatus() * 100 < pur.getRound().getMyShareGoal() && pur.isMyShareOnTrackPoints()) {
+            } else if (us.get().getStatus() * 100 < pur.getRound().getLocalMyShareGoal() && pur.isMyShareOnTrackPoints()) {
                 pur.setOnTrack(false);
-                saveOnTrackItems(createOnTrackTransactionItem(pur.getUser(), pur.getRound(), myShareOnTrackName + "  revert", -10), myShareOnTrackName + "  revert");
-                pur.setMyShareOnTrackPoints(false);
             }
         }
-        Double sumPoints = transactionItemService.sumPointsByUserAndRound(pur.getUser(), pur.getRound());
-        pur.addRoundCoins(sumPoints == null ? 0 : sumPoints);
-
-        Double userPoints =transactionItemService.sumPointsByUserAndSeasonYear(pur.getUser(), pur.getRound().getSeason().getSeasonYear());
-//        Double userPoints = sumByUserAndSeason(pur.getUser(), pur.getRound().getSeason().getSeasonYear());
-
-        pur.getUser().setPoints(userPoints == null ? 0 : userPoints);
+        Integer credits = transactionItemService.sumCreditsByUserAndRound(pur.getUser(), pur.getRound());
+        pur.setRoundCredits(credits == null ? 0 : credits);
         userService.save(pur.getUser());
-
     }
 
     @Override
@@ -160,12 +161,11 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         Round currentRound = roundService.getLastRound();
         for (UserStatus u : userStatusService.fetchByQuery(LocalDate.now().getYear(), null)) {
             Optional<PaceUserRound> ur = repository.findByUserAndRound(u.getUser(), currentRound);
-            Integer goal = u.getGoal();
             if (ur.isPresent()) {
                 if (!ur.get().isOnTrack() && !u.getUser().getEmail().isEmpty()) {
                     try {
 //                        if (u.getId() == 255) {
-                        microsoftService.sendStatusUpdate(u.getTransactions(), u.getStatus() * 100, ur.get().getRoundMyShareGoal() - u.getTransactions(), u.getUser(), currentRound);
+                        microsoftService.sendStatusUpdate(u.getTransactions(), u.getStatus() * 100, ur.get().getRoundMyShareGoal(), u.getUser(), currentRound);
 //                        }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -207,5 +207,9 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         item.setDescription(description);
         item.setCreateUser(userService.findAllByRole(Role.ADMIN).iterator().next());
         return item;
+    }
+
+    public void deleteByUserAndSeason(User user, Season season) {
+
     }
 }

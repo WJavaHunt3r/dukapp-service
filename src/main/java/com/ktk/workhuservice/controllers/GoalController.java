@@ -32,7 +32,7 @@ public class GoalController {
     private final PaceUserRoundService userRoundService;
     private final UserStatusService userStatusService;
 
-    public GoalController(GoalService goalService, UserService userService, SeasonService seasonService, GoalMapper goalMapper, PaceUserRoundService userRoundService, UserStatusService userStatusService) {
+    public GoalController(GoalService goalService, UserService userService, SeasonService seasonService, GoalMapper goalMapper, PaceUserRoundService userRoundService, UserStatusService userStatusService, PaceUserRoundService paceUserRoundService) {
         this.goalService = goalService;
         this.userService = userService;
         this.seasonService = seasonService;
@@ -107,7 +107,7 @@ public class GoalController {
 
             Goal entity = goalService.save(goalMapper.dtoToEntity(goalDto, goal.get()));
             userRoundService.calculateUserRoundStatus(entity.getUser());
-            userStatusService.calculateUserStatus(goal.get().getUser());
+            userStatusService.calculateUserStatus(goal.get().getUser(), goal.get().getGoal());
             return ResponseEntity.status(200).body(goalMapper.entityToDto(entity));
         }
         return ResponseEntity.status(404).body("User not allowed to change this goal");
@@ -126,6 +126,7 @@ public class GoalController {
             Optional<Goal> g = goalService.findById(id);
             Optional<UserStatus> us = userStatusService.findByUserId(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());
             us.ifPresent(u -> userStatusService.deleteById(u.getId()));
+//            userRoundService.deleteByUserAndSeason(g.get().getUser(), g.get().getSeason());
             goalService.deleteById(id);
             return ResponseEntity.status(200).body("Delete successful");
         }

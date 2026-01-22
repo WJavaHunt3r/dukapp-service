@@ -19,7 +19,6 @@ import java.time.LocalDate;
 @FieldNameConstants
 public class Camp extends BaseEntity<Camp, Long> {
 
-
     @NotNull
     @JoinColumn(name = "SEASON")
     @ManyToOne

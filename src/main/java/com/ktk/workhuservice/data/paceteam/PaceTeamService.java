@@ -20,7 +20,6 @@ public class PaceTeamService extends BaseService<PaceTeam, Long> {
 
     public List<PaceTeam> findActiveTeams() {
         return findActiveTeams(true);
-
     }
 
     @Override

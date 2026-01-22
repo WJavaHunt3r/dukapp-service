@@ -1,5 +1,6 @@
 package com.ktk.workhuservice.data.transactionitems;
 
+import com.ktk.workhuservice.data.paceteam.PaceTeam;
 import com.ktk.workhuservice.data.rounds.Round;
 import com.ktk.workhuservice.data.users.User;
 import com.ktk.workhuservice.enums.Account;
@@ -29,22 +30,6 @@ public class TransactionItemService {
         return transactionItemRepository.fetchByQuery(transactionType, startDate, endDate, transactionId, roundId, userId, seasonYear);
     }
 
-    public Iterable<TransactionItem> findAllByUser(User user) {
-        return transactionItemRepository.findAllByUser(user);
-    }
-
-    public List<TransactionItem> findAllByUserAndSeasonYear(User user, Integer seasonYear) {
-        return transactionItemRepository.findAllByUserAndSeasonYear(user, seasonYear);
-    }
-
-    public Iterable<TransactionItem> findAllByUserAndRound(User user, Round s) {
-        return transactionItemRepository.findAllByUserAndRound(user, s);
-    }
-
-    public Integer sumCreditByUserAndRound(User user, Round s) {
-        return transactionItemRepository.sumCreditByUserAndRound(user, s);
-    }
-
     public Double sumPointsByUserAndRound(User user, Round s) {
         return transactionItemRepository.sumPointsByUserAndRound(user, s);
     }
@@ -53,12 +38,12 @@ public class TransactionItemService {
         return transactionItemRepository.sumPointsByUserAndSeasonYear(user, seasonYear);
     }
 
-    public Integer sumCreditByUserAndSeasonYear(User user, Integer year, Account account) {
-        return transactionItemRepository.sumCreditByUserAndSeasonYear(user, year, account);
+    public Integer sumCreditsByUserAndRound(User user, Round r) {
+        return transactionItemRepository.sumCreditsByUserAndRound(user, r);
     }
 
-    public Iterable<TransactionItem> findAllByTransactionId(Long id) {
-        return transactionItemRepository.findAllByTransactionId(id);
+    public Integer sumCreditByUserAndSeasonYear(User user, Integer year, Account account) {
+        return transactionItemRepository.sumCreditByUserAndSeasonYear(user, year, account);
     }
 
     public Integer countByTransactionId(Long id) {
@@ -75,16 +60,18 @@ public class TransactionItemService {
 
     public TransactionItem save(TransactionItem t) {
         if (t.getPoints() != 0.0 || t.getHours() != 0.0 || t.getCredit() != 0) {
-            Round transactionRound = t.getRound();
             if (t.getAccount().equals(Account.MYSHARE)) {
                 if (t.getTransactionType().equals(TransactionType.CREDIT) && t.getCredit() != 0) {
                     double creditPoints = (double) t.getCredit() / 1000.0;
                     t.setPoints(creditPoints);
-                } else if (Arrays.asList(TransactionType.DUKA_MUNKA_2000, TransactionType.HOURS).contains(t.getTransactionType()) && t.getHours() != 0) {
-                    t.setPoints(t.getHours() * 6.0);
+                } else if (TransactionType.DUKA_MUNKA_2000.equals(t.getTransactionType()) && t.getHours() != 0) {
+                    t.setPoints(t.getHours() * 4.0);
                     t.setCredit((int) (t.getHours() * 2000));
+                } else if (TransactionType.HOURS.equals(t.getTransactionType()) && t.getHours() != 0) {
+                    t.setPoints(t.getHours() * 4.0);
+                    t.setCredit((int) (t.getHours() * 3000));
                 } else if (t.getTransactionType().equals(TransactionType.DUKA_MUNKA) && t.getHours() != 0) {
-                    t.setPoints(t.getHours() * 6.0);
+                    t.setPoints(t.getHours() * 4.0);
                     t.setCredit((int) (t.getHours() * 1000));
                 }
 
@@ -123,4 +110,11 @@ public class TransactionItemService {
         transactions.iterator().forEachRemaining(this::save);
     }
 
+    public Double sumHoursByTeamAndRound(PaceTeam team, Round round) {
+        return transactionItemRepository.sumHoursByTeamAndRound(team, round);
+    }
+
+    public Integer sumCreditsByTeamAndRound(PaceTeam team, Round round) {
+        return transactionItemRepository.sumCreditsByTeamAndRound(team, round);
+    }
 }
