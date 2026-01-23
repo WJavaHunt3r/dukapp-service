@@ -9,13 +9,13 @@
         <relativePath/>
     </parent>
     <groupId>com.ktk</groupId>
-    <artifactId>work-hu-service</artifactId>
+    <artifactId>dukapp-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>work-hu-service</name>
-    <description>Service interface for Work HU App</description>
+    <name>dukapp-service</name>
+    <description>Service interface for DukApp</description>
     <properties>
         <java.version>11</java.version>
-        <start-class>com.ktk.workhuservice.WorkHuServiceApplication</start-class>
+        <start-class>com.ktk.dukappservice.DukAppServiceApplication</start-class>
     </properties>
     <dependencies>
         <dependency>
@@ -48,6 +48,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <version>2.4.240</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -113,6 +114,11 @@
             <groupId>org.dhatim</groupId>
             <artifactId>fastexcel</artifactId>
             <version>0.15.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
     </dependencies>
