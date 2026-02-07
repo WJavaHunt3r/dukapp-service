@@ -1,38 +1,55 @@
 package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.users.User;
+import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.ChangePasswordDto;
 import com.ktk.dukappservice.dto.LoginDto;
 import com.ktk.dukappservice.dto.ResetPasswordDto;
 import com.ktk.dukappservice.dto.SendNewPasswordDto;
 import com.ktk.dukappservice.enums.Role;
-import com.ktk.dukappservice.security.SecurityUtils;
-import com.ktk.dukappservice.data.users.UserService;
+import com.ktk.dukappservice.security.DukAppDetailsManager;
+import com.ktk.dukappservice.security.JwtResponse;
+import com.ktk.dukappservice.security.JwtUtils;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.microsoft.graph.models.odataerrors.ODataError;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private AuthenticationManager authenticationManager;
-    private UserService userService;
-    private MicrosoftService microsoftService;
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final MicrosoftService microsoftService;
+    private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager authenticationManager, UserService userService, MicrosoftService microsoftService) {
+    private final DukAppDetailsManager detailsManager;
+
+    public AuthController(AuthenticationManager authenticationManager, UserService userService, MicrosoftService microsoftService, JwtUtils jwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.microsoftService = microsoftService;
+        this.jwtUtils = jwtUtils;
+        this.passwordEncoder = passwordEncoder;
+        this.detailsManager = detailsManager;
     }
 
     @PostMapping("/login")
@@ -40,55 +57,57 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginDto.getUsername(), loginDto.getPassword()));
 
-        return ResponseEntity.status(200).body(authentication.getPrincipal());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String jwt = jwtUtils.generateToken(loginDto.getUsername());
+
+        org.springframework.security.core.userdetails.User userDetails =
+                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        // 5. Return the DTO
+        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), roles));
     }
 
     @PostMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDto dto) {
+        User user = userService.findByUsername(dto.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Optional<User> user = userService.findByUsername(dto.getUsername());
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("Username not found");
+        // ALWAYS use .matches(plainText, hashedStoredValue)
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            return ResponseEntity.status(400).body("Old password incorrect");
         }
 
-        if (!user.get().getPassword().equals(dto.getOldPassword())) {
-            return ResponseEntity.status(400).body("Wrong password");
-        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        user.setChangedPassword(true);
+        userService.save(user);
 
-        if (user.get().getPassword().equals(dto.getNewPassword())) {
-            return ResponseEntity.status(400).body("New password cannot be same as old password");
-        }
-
-        user.get().setPassword(dto.getNewPassword());
-        user.get().setChangedPassword(true);
-
-        userService.save(user.get());
-
-        return ResponseEntity.status(200).body("Password change successful");
+        return ResponseEntity.ok("Password updated to BCrypt format");
     }
 
     @PostMapping("/resetPassword")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDto dto) {
 
-        Optional<User> user = userService.findById(dto.getUserId());
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id: " + dto.getUserId());
+        User changer = userService.findById(dto.getChangerId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
+
+        if (changer.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Admin role required");
         }
 
-        Optional<User> changer = userService.findById(dto.getChangerId());
-        if (changer.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id: " + dto.getChangerId());
-        }
-        if (changer.get().getRole() != Role.ADMIN) {
-            return ResponseEntity.status(400).body("User is not admin");
-        }
+        User targetUser = userService.findById(dto.getUserId()).orElseThrow();
 
-        user.get().setPassword(SecurityUtils.encryptSecret(user.get().getUsername()));
-        user.get().setChangedPassword(false);
+        // 1. Generate the new hash
+        String newHash = passwordEncoder.encode(targetUser.getUsername());
 
-        userService.save(user.get());
+        UserDetails userDetails = detailsManager.loadUserByUsername(targetUser.getUsername());
+        detailsManager.updatePassword(userDetails, newHash);
+        return ResponseEntity.ok("Password reset successfully");
 
-        return ResponseEntity.status(200).body("Password reset successful");
     }
 
     @PostMapping("/sendNewPassword")
@@ -100,7 +119,8 @@ public class AuthController {
             return ResponseEntity.status(400).body("No user with email or username: " + email);
         }
 
-        user.get().setPassword(SecurityUtils.encryptSecret(user.get().getUsername()));
+        String encodedPassword = passwordEncoder.encode(user.get().getUsername());
+        user.get().setPassword(encodedPassword);
         user.get().setChangedPassword(false);
 
         userService.save(user.get());
@@ -108,7 +128,7 @@ public class AuthController {
             microsoftService.sendNewPassword(user.get(), user.get().getUsername());
         } catch (Exception e) {
             if (e instanceof ODataError) {
-                ((ODataError) e).getError().getCode();
+                Objects.requireNonNull(((ODataError) e).getError()).getCode();
                 ((ODataError) e).getError().getMessage();
             }
             return ResponseEntity.status(500).body(e.toString());

@@ -7,8 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @Setter
@@ -31,13 +32,15 @@ public class PaceUserRound extends BaseEntity<PaceUserRound, Long> {
     @Column(name = "SAMVIRK_PAYMENTS", columnDefinition = "integer default 0")
     private Integer samvirkPayments = 0;
 
-    @Column(name = "ROUND_COINS", columnDefinition = "float8 default 0")
+    @Column(name = "ROUND_COINS")
+    @ColumnDefault("0.0")
     private Double roundCoins;
 
     @Column(name = "ROUND_CREDITS", columnDefinition = "integer default 0")
     private Integer roundCredits;
 
-    @Column(name = "BMM_PERFECT_WEEK_POINTS", columnDefinition = "float8 default 0")
+    @Column(name = "BMM_PERFECT_WEEK_POINTS")
+    @ColumnDefault("0.0")
     private double bMMPerfectWeekPoints;
 
     @Column(name = "ROUND_MYSHARE_GOAL", columnDefinition = "integer default 0")

@@ -6,17 +6,23 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DukAppDetailsManager implements UserDetailsManager, UserDetailsPasswordService {
-    private UserService userService;
+    private final UserService userService;
 
     public DukAppDetailsManager(UserService userService) {
         this.userService = userService;
     }
 
     @Override
-    public UserDetails updatePassword(UserDetails userDetails, String s) {
-        throw new UnsupportedOperationException();
+    public UserDetails updatePassword(UserDetails user, String newEncodedPassword) {
+        userService.findByUsername(user.getUsername()).ifPresent(u -> {
+            u.setPassword(newEncodedPassword);
+            userService.save(u);
+        });
+        return user;
     }
 
     @Override
@@ -46,12 +52,13 @@ public class DukAppDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userService.findByUsername(username).map(u -> {
-            User.UserBuilder builder = User.builder();
-            builder.username(u.getUsername());
-            builder.password(u.getPassword());
-            builder.roles(u.getRole().name());
-            return builder.build();
-        }).orElseThrow(() -> new UsernameNotFoundException("User does not exist with the given username: " + username));
+        return userService.findByUsername(username).map(u ->
+                User.withUsername(u.getUsername())
+                        .password(u.getPassword())
+                        .roles(u.getRole().name())
+                        .build()
+        ).orElseThrow(() -> new UsernameNotFoundException("User does not exist with the given username: " + username));
     }
+
+
 }

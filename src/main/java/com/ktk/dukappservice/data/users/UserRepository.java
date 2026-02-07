@@ -39,4 +39,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM Goal g JOIN g.user u JOIN g.season s where s.seasonYear = ?1 and u IS NOT null ")
     Iterable<User> findAllBUKBySeason(Integer seasonYear);
+
 }

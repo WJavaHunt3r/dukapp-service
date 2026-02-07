@@ -3,13 +3,14 @@ package com.ktk.dukappservice.data.rounds;
 import com.ktk.dukappservice.data.BaseEntity;
 import com.ktk.dukappservice.data.paceteam.PaceTeam;
 import com.ktk.dukappservice.data.seasons.Season;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Getter
@@ -46,10 +47,12 @@ public class Round extends BaseEntity<Round, Long> {
     @NotNull
     private Integer samvirkChurchGoal;
 
-    @Column(name = "SAMVIRK_MAX_POINTS", columnDefinition = "float8 default 0")
+    @Column(name = "SAMVIRK_MAX_POINTS")
+    @ColumnDefault("0.0")
     private double samvirkMaxPoints;
 
-    @Column(name = "SAMVIRK_ON_TRACK_POINTS", columnDefinition = "float8 default 0")
+    @Column(name = "SAMVIRK_ON_TRACK_POINTS")
+    @ColumnDefault("0.0")
     private double samvirkOnTrackPoints;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")

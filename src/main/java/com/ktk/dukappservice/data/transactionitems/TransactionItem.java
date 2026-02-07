@@ -8,11 +8,12 @@ import com.ktk.dukappservice.enums.TransactionType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -40,7 +41,8 @@ public class TransactionItem extends BaseEntity<TransactionItem, Long> {
     @JoinColumn(name = "USERS")
     private User user;
 
-    @Column(name = "POINTS", columnDefinition = "float8 default 0")
+    @Column(name = "POINTS")
+    @ColumnDefault("0.0")
     @NotNull
     private double points;
 
