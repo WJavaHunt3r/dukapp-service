@@ -65,7 +65,6 @@ public class User extends BaseEntity<User, Long> {
     private Role role;
 
     @Column(name = "MYSHARE_ID")
-    @NotNull
     private long myShareID;
 
     @Column(name = "BASE_MYSHARE_CREDIT")

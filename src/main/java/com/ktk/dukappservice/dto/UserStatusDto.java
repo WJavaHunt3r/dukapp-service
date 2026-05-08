@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.dto;
 
-import com.ktk.dukappservice.data.seasons.Season;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +10,7 @@ import lombok.Setter;
 public class UserStatusDto {
     private Long id;
 
-    private UserDto user;
+    private String name;
 
     private Integer goal;
 
@@ -21,10 +20,12 @@ public class UserStatusDto {
 
     private Integer transition ;
 
-    private Season season;
+    private Integer seasonYear;
 
     private boolean onTrack;
 
     private boolean localOnTrack;
+
+    private Integer toOnTrack;
 
 }

@@ -3,6 +3,7 @@ package com.ktk.dukappservice.security;
 import com.ktk.dukappservice.data.users.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -84,7 +85,11 @@ public class DukAppSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/donations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()
+                        .requestMatchers("/api/payments/*").permitAll()
+                        .requestMatchers("/api/payments").permitAll()
+                        .anyRequest().authenticated()
                 )
                 // Spring Boot 4 encourages granular filter ordering
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -100,7 +105,8 @@ public class DukAppSecurityConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**").allowedOrigins(
                         "https://dukapp.bcc-ktk.org",
-                        "http://localhost:8999" // Match your flutter web port
+                        "http://localhost:8999",
+                        "http://localhost:50757"
                 ).allowedHeaders("*").allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS");
             }
         };

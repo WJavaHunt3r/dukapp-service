@@ -10,11 +10,13 @@ import com.ktk.dukappservice.dto.UserDto;
 import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.UserMapper;
 import com.ktk.dukappservice.service.UserFamilyImportService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
@@ -27,8 +29,7 @@ public class UserController {
     private final PaceTeamService paceTeamService;
     private final UserMapper userMapper;
     private final SeasonService seasonService;
-    private final PaceTeamRoundService paceTeamRoundService;
-    private final UserFamilyImportService userFamilyImportService;
+    private final PaceTeamRoundService paceTeamRoundService;    
 
     public UserController(UserService userService, PaceTeamService paceTeamService, UserMapper modelMapper, SeasonService seasonService, PaceTeamRoundService paceTeamRoundService, UserFamilyImportService userFamilyImportService) {
         this.userService = userService;
@@ -36,7 +37,6 @@ public class UserController {
         this.userMapper = modelMapper;
         this.seasonService = seasonService;
         this.paceTeamRoundService = paceTeamRoundService;
-        this.userFamilyImportService = userFamilyImportService;
     }
 
     @GetMapping("/{id}")
@@ -47,6 +47,16 @@ public class UserController {
         }
 
         return ResponseEntity.status(404).body("User not found");
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getUser(@AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> userById = userService.findByUsername(userDetails.getUsername());
+        if (userById.isPresent()) {
+            return ResponseEntity.status(200).body(userMapper.entityToDto(userById.get()));
+        }
+        return ResponseEntity.status(404).body("User not found");
+
     }
 
     @GetMapping("/myShare/{myShareId}")
@@ -69,14 +79,14 @@ public class UserController {
         return ResponseEntity.status(404).body("User not found");
     }
 
-    @GetMapping("/{id}/children")
-    public ResponseEntity<?> getUserByFamilyId(@PathVariable Long id) {
-        Optional<User> user = userService.findById(id);
+    @GetMapping("/me/family")
+    public ResponseEntity<?> getFamily(@AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> user = userService.findByUsername(userDetails.getUsername());
         if (user.isPresent()) {
             if (user.get().getAge() <= 18) {
                 return ResponseEntity.status(404).body("No kids");
             }
-            return ResponseEntity.status(200).body(userService.findChildren(user.get().getFamilyId()).stream().map((e) -> userMapper.entityToDto(e)));
+            return ResponseEntity.status(200).body(userService.findFamiliy(user.get().getFamilyId()).stream().map(userMapper::entityToDto));
         }
 
         return ResponseEntity.status(404).body("User not found");
@@ -98,12 +108,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> putUser(@Valid @RequestBody UserDto userDto, @PathVariable Long id, @RequestParam("modifyUserId") Long modifyUserId) {
-        Optional<User> createUser = userService.findById(modifyUserId);
-        if (createUser.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + modifyUserId);
-        }
-        if (createUser.get().getRole().equals(Role.USER) && !userDto.getId().equals(id)) {
+    public ResponseEntity<?> putUser(@Valid @RequestBody UserDto userDto, @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> createUser = userService.findByUsername(userDetails.getUsername());
+        if (createUser.isPresent() && createUser.get().getRole().equals(Role.USER) && !userDto.getId().equals(id)) {
             return ResponseEntity.status(403).body("Permission denied:");
         }
         Optional<User> user = userService.findById(userDto.getId());
@@ -119,13 +126,4 @@ public class UserController {
         return ResponseEntity.status(200).body("Pace Teams set");
     }
 
-    @GetMapping("/importFamilyIds")
-    public ResponseEntity<?> impostFamilyIds() {
-        boolean succeeded = userFamilyImportService.importUserFamilyIds();
-        if (succeeded) {
-            return ResponseEntity.status(200).body("User family ids imported");
-        } else {
-            return ResponseEntity.status(500).body("Failed to import user family ids!");
-        }
-    }
 }

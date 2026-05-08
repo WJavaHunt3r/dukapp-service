@@ -47,7 +47,7 @@ public class MicrosoftService {
         FieldValueSet fields = new FieldValueSet();
         HashMap<String, Object> additionalData = new HashMap<>();
 
-        var items = activityItemService.findByActivity(activity.getId());
+        var items = activityItemService.findByActivity(activity.getId()).toList();
         String xlsx = MicrosoftUtils.createXlsxFromActivity(activity, items, sumHours, new ClassPathResource("imports/docs/munkalap_sablon_uj.xlsx").getInputStream());
 
         if (activity.getTransactionType().equals(TransactionType.HOURS)) {

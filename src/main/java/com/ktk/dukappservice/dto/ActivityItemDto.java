@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.dto;
 
-import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.enums.Account;
 import com.ktk.dukappservice.enums.TransactionType;
 import lombok.Getter;
@@ -16,13 +15,17 @@ public class ActivityItemDto {
 
     private long id;
 
-    private ActivityDto activity;
+    private Long activityId;
 
     private String description;
 
-    private UserDto user;
+    private Long userId;
 
-    private UserDto createUser;
+    private String userName;
+
+    private Long createUserId;
+
+    private String createUserName;
 
     private TransactionType transactionType;
 
@@ -30,7 +33,7 @@ public class ActivityItemDto {
 
     private double hours;
 
-    private Round round;
+    private Long roundId;
 
     private LocalDateTime createDateTime;
 }

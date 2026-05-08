@@ -1,23 +1,25 @@
 package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.activity.Activity;
-import com.ktk.dukappservice.data.activityitems.ActivityItem;
-import com.ktk.dukappservice.data.rounds.Round;
-import com.ktk.dukappservice.data.users.User;
-import com.ktk.dukappservice.dto.ActivityItemDto;
-import com.ktk.dukappservice.dto.UserDto;
-import com.ktk.dukappservice.enums.Role;
-import com.ktk.dukappservice.data.activityitems.ActivityItemService;
 import com.ktk.dukappservice.data.activity.ActivityService;
+import com.ktk.dukappservice.data.activityitems.ActivityItem;
+import com.ktk.dukappservice.data.activityitems.ActivityItemService;
+import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
+import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
+import com.ktk.dukappservice.dto.ActivityItemDto;
+import com.ktk.dukappservice.enums.Role;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +27,11 @@ import java.util.Optional;
 @Controller()
 @RequestMapping("/api/activityItem")
 public class ActivityItemController {
-    private ActivityService activityService;
-    private ActivityItemService activityItemService;
-    private UserService userService;
-    private RoundService roundService;
-    private ModelMapper modelMapper;
+    private final ActivityService activityService;
+    private final ActivityItemService activityItemService;
+    private final UserService userService;
+    private final RoundService roundService;
+    private final ModelMapper modelMapper;
 
     public ActivityItemController(ActivityService activityService, ActivityItemService activityItemService, UserService userService, RoundService roundService, ModelMapper modelMapper) {
         this.activityService = activityService;
@@ -40,34 +42,34 @@ public class ActivityItemController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> addActivityItem(@Valid @RequestBody ActivityItemDto activityItem) {
-        Optional<Activity> activity = activityService.findById(activityItem.getActivity().getId());
+    public ResponseEntity<?> addActivityItem(@Valid @RequestBody ActivityItemDto activityItem, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<Activity> activity = activityService.findById(activityItem.getActivityId());
         if (activity.isEmpty()) {
-            return ResponseEntity.status(400).body("No activity found with id: " + activityItem.getActivity().getId());
+            return ResponseEntity.status(400).body("No activity found with id: " + activityItem.getActivityId());
         }
 
-        Optional<User> user = userService.findById(activityItem.getUser().getId());
+        Optional<User> user = userService.findById(activityItem.getUserId());
         if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user found with id: " + activityItem.getUser().getId());
+            return ResponseEntity.status(400).body("No user found with id: " + activityItem.getUserId());
         }
 
-        Optional<Round> round = roundService.findById(activityItem.getRound().getId());
+        Optional<Round> round = roundService.findById(activityItem.getRoundId());
         if (round.isEmpty()) {
-            return ResponseEntity.status(400).body("No round found with id: " + activityItem.getRound().getId());
+            return ResponseEntity.status(400).body("No round found with id: " + activityItem.getRoundId());
         }
 
-        Optional<User> createUser = userService.findById(activityItem.getCreateUser().getId());
+        Optional<User> createUser = userService.findByUsername(userDetails.getUsername());
         if (createUser.isEmpty()) {
-            return ResponseEntity.status(400).body("CreateUser not found by id: " + activityItem.getCreateUser());
+            return ResponseEntity.status(400).body("CreateUser not found by id: " + activityItem.getCreateUserId());
         }
 
-        activityItemService.save(convertToEntity(activityItem, user.get(), createUser.get()));
+        activityItemService.save(convertToEntity(activityItem, user.get(), createUser.get(), activity.get(), round.get()));
         return ResponseEntity.status(200).build();
     }
 
     @PostMapping("/items")
-    public ResponseEntity<?> addActivityItems(@Valid @RequestBody List<ActivityItemDto> activityItems) {
-        activityItems.forEach(this::addActivityItem);
+    public ResponseEntity<?> addActivityItems(@Valid @RequestBody List<ActivityItemDto> activityItems, @AuthenticationPrincipal UserDetails userDetails) {
+        activityItems.forEach((e) -> addActivityItem(e, userDetails));
         return ResponseEntity.ok().body("Successfully added");
 
     }
@@ -99,27 +101,30 @@ public class ActivityItemController {
                                               @Nullable @RequestParam("userId") Long userId,
                                               @Nullable @RequestParam("registeredInApp") Boolean registeredInApp,
                                               @Nullable @RequestParam("roundId") Long roundId,
-                                              @Nullable @RequestParam("searchText") String searchText) {
-        if (activityId != null) {
-            return ResponseEntity.ok(activityItemService.findByActivity(activityId).stream().map(this::convertToDto));
-        }
+                                              @Nullable @RequestParam("searchText") String searchText, Pageable pageable) {
 
-        return ResponseEntity.ok(activityItemService.fetchByQuery(userId, registeredInApp, roundId, searchText).stream().map(this::convertToDto));
+        return ResponseEntity.ok(activityItemService.fetchByQuery(activityId, userId, registeredInApp, roundId, searchText, pageable).map(this::convertToDto));
 
     }
 
-    private ActivityItem convertToEntity(ActivityItemDto dto, User user, User createUser) {
-        ActivityItem activity = modelMapper.map(dto, ActivityItem.class);
-        activity.setUser(user);
-        activity.setCreateUser(createUser);
-        activity.setCreateDateTime(LocalDateTime.now());
-        return activity;
+    private ActivityItem convertToEntity(ActivityItemDto dto, User user, User createUser, Activity activity, Round round) {
+        ActivityItem activityitem = modelMapper.map(dto, ActivityItem.class);
+        activityitem.setUser(user);
+        activityitem.setCreateUser(createUser);
+        activityitem.setCreateDateTime(LocalDateTime.now());
+        activityitem.setActivity(activity);
+        activityitem.setRound(round);
+        return activityitem;
     }
 
     private ActivityItemDto convertToDto(ActivityItem activity) {
         ActivityItemDto dto = modelMapper.map(activity, ActivityItemDto.class);
-        dto.setUser(modelMapper.map(activity.getUser(), UserDto.class));
-        dto.setCreateUser(modelMapper.map(activity.getCreateUser(), UserDto.class));
+        dto.setUserName(activity.getUser().getFullName());
+        dto.setUserId(activity.getUser().getId());
+        dto.setCreateUserName(activity.getCreateUser().getFullName());
+        dto.setCreateUserId(activity.getCreateUser().getId());
+        dto.setActivityId(activity.getActivity().getId());
+        dto.setRoundId(activity.getRound().getId());
         return dto;
     }
 }

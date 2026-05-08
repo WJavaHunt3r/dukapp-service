@@ -1,10 +1,10 @@
 package com.ktk.dukappservice.data.activityitems;
 
 import com.ktk.dukappservice.service.BaseService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class ActivityItemService extends BaseService<ActivityItem, Long> {
@@ -14,12 +14,12 @@ public class ActivityItemService extends BaseService<ActivityItem, Long> {
         this.activityItemRepository = activityItemRepository;
     }
 
-    public List<ActivityItem> findByActivity(Long activityId) {
-        return activityItemRepository.findByActivity_Id(activityId);
+    public Page<ActivityItem> findByActivity(Long activityId) {
+        return fetchByQuery(activityId, null, null, null, null, null);
     }
 
-    public List<ActivityItem> fetchByQuery(Long userId, Boolean registeredInApp, Long roundId, String searchText) {
-        return activityItemRepository.fetchByQuery(userId, registeredInApp, roundId, searchText);
+    public Page<ActivityItem> fetchByQuery(Long activityId, Long userId, Boolean registeredInApp, Long roundId, String searchText, Pageable pageable) {
+        return activityItemRepository.fetchByQuery(activityId, userId, registeredInApp, roundId, searchText, pageable);
     }
 
     public void deleteByActivityId(Long activityId) {

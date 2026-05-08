@@ -9,6 +9,8 @@ import com.ktk.dukappservice.data.transactions.TransactionService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.service.BaseService;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +18,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,12 +37,12 @@ public class ActivityService extends BaseService<Activity, Long> {
         this.transactionServiceUtils = transactionServiceUtils;
     }
 
-    public List<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String searchText) {
-        return fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, null, searchText);
+    public Page<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String searchText, Pageable pageable) {
+        return fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, null, searchText, pageable);
     }
 
-    public List<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String referenceDate, String searchText) {
-        return repository.fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, getDateFrom(referenceDate), getDateTo(referenceDate), searchText);
+    public Page<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String referenceDate, String searchText, Pageable pageable) {
+        return repository.fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, getDateFrom(referenceDate), getDateTo(referenceDate), searchText, pageable);
     }
 
     private LocalDateTime getDateTo(String dateString) {

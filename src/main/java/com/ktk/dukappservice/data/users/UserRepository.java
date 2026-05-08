@@ -18,12 +18,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailOrUsername(String email, String username);
+
     Optional<User> findByMyShareID(Long id);
 
     Iterable<User> findAllByRole(Role role);
 
-    @Query("SELECT u FROM User u where u.familyId = ?1 and u.id <> ?1 and u.spouseId is null")
-    List<User> findChildren(Long familyId);
+    @Query("SELECT u FROM User u where u.familyId = ?1 and u.id <> ?1")
+    List<User> findFamily(Long familyId);
 
     @Query("SELECT u FROM Goal g JOIN g.user u JOIN g.season s where s = ?2 and u.paceTeam = ?1")
     Iterable<User> findAllByPaceTeamAndSeasonAndGoal(PaceTeam t, Season s);

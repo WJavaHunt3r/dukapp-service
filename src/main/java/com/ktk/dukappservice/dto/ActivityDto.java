@@ -16,15 +16,21 @@ public class ActivityDto {
 
     private LocalDateTime createDateTime;
 
-    private UserDto createUser;
+    private Long createUserId;
+
+    private String createUserName;
 
     private LocalDateTime activityDateTime;
 
     private String description;
 
-    private UserDto employer;
+    private Long employerId;
 
-    private UserDto responsible;
+    private String employerName;
+
+    private Long responsibleId;
+
+    private String responsibleName;
 
     private Integer activityId;
 

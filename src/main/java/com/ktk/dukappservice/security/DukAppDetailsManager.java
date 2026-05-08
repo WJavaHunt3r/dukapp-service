@@ -52,7 +52,7 @@ public class DukAppDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userService.findByUsername(username).map(u ->
+        return userService.findByEmailOrUsername(username, username).map(u ->
                 User.withUsername(u.getUsername())
                         .password(u.getPassword())
                         .roles(u.getRole().name())

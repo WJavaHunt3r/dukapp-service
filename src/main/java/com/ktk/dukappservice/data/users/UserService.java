@@ -32,6 +32,10 @@ public class UserService extends BaseService<User, Long> {
         return user;
     }
 
+    public Optional<User> findByEmailOrUsername(String email, String username) {
+        return userRepository.findByEmailOrUsername(email, username);
+    }
+
     public Iterable<User> getYouth() {
         return getYouth(LocalDate.now().getYear());
     }
@@ -48,8 +52,8 @@ public class UserService extends BaseService<User, Long> {
         return userRepository.findAllByRole(role);
     }
 
-    public List<User> findChildren(Long familyId) {
-        return userRepository.findChildren(familyId);
+    public List<User> findFamiliy(Long familyId) {
+        return userRepository.findFamily(familyId);
     }
 
     public Iterable<User> findAllByPaceTeam(PaceTeam t, Season s) {
