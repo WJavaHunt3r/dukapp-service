@@ -12,6 +12,8 @@ public class UserStatusDto {
 
     private String name;
 
+    private Long userId;
+
     private Integer goal;
 
     private double status;

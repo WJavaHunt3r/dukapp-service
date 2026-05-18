@@ -8,6 +8,7 @@ import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,7 +34,7 @@ public class NotificationService {
         this.microsoftService = microsoftService;
     }
 
-//    @Scheduled(cron = "0 0 17 * * TUE")
+    @Scheduled(cron = "0 0 17 * * TUE")
     public void sendOnTrackEmails() {
         Round currentRound = roundService.getLastRound();
         int currentYear = LocalDate.now().getYear();

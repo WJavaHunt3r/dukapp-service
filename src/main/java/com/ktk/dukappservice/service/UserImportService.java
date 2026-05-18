@@ -125,7 +125,7 @@ public class UserImportService {
 
     private User createUser(String[] data) {
         User user = new User();
-        user.setMyShareID(Integer.parseInt(data[0]));
+//        user.setMyShareID(Integer.parseInt(data[0]));
         user.setFirstname(data[2]);
         user.setLastname(data[1]);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");

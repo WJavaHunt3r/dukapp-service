@@ -199,6 +199,7 @@ public class AuthController {
                     newUser.setEmail(email);
                     newUser.setFirstname(firstName);
                     newUser.setLastname(lastName);
+                    newUser.setMyShareID(null);
                     // Generate username using your normalization logic
                     String baseUsername = normalizeUsername(lastName, firstName);
                     String finalUsername = baseUsername;

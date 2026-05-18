@@ -14,11 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+
+import static com.ktk.dukappservice.data.ServiceUtils.getDateFrom;
+import static com.ktk.dukappservice.data.ServiceUtils.getDateTo;
 
 @Service
 public class ActivityService extends BaseService<Activity, Long> {
@@ -43,23 +43,6 @@ public class ActivityService extends BaseService<Activity, Long> {
 
     public Page<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String referenceDate, String searchText, Pageable pageable) {
         return repository.fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, getDateFrom(referenceDate), getDateTo(referenceDate), searchText, pageable);
-    }
-
-    private LocalDateTime getDateTo(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
-            return LocalDateTime.now();
-        }
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-        return LocalDateTime.of(date.getYear(), date.getMonth(), YearMonth.of(date.getYear(), date.getMonth()).atEndOfMonth().getDayOfMonth(), 0, 0).plusDays(1);
-    }
-
-    private LocalDateTime getDateFrom(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
-            return LocalDateTime.of(2024, 1, 1, 0, 0);
-        }
-
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-        return LocalDateTime.of(date.getYear(), date.getMonth(), 1, 0, 0);
     }
 
     public Optional<Activity> findById(Long id) {

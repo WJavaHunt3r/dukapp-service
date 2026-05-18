@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ActivityItemDto {
 
-    private long id;
+    private Long id;
 
     private Long activityId;
 

@@ -102,7 +102,7 @@ public class UserRoundService extends BaseService<UserRound, Long> {
             if (userGoal.isEmpty()) {
                 return;
             }
-            List<TransactionItem> transactions = transactionItemService.fetchByQuery(null, null, null, null, round.getId(), user.getId(), null);
+            List<TransactionItem> transactions = transactionItemService.fetchByQuery(null, null, null, null, round.getId(), user.getId(), null, null).toList();
             transactions.forEach(t -> addTransaction(t, userRound));
 
             Integer goal = userGoal.get().getGoal();

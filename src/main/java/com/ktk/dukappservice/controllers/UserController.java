@@ -29,7 +29,7 @@ public class UserController {
     private final PaceTeamService paceTeamService;
     private final UserMapper userMapper;
     private final SeasonService seasonService;
-    private final PaceTeamRoundService paceTeamRoundService;    
+    private final PaceTeamRoundService paceTeamRoundService;
 
     public UserController(UserService userService, PaceTeamService paceTeamService, UserMapper modelMapper, SeasonService seasonService, PaceTeamRoundService paceTeamRoundService, UserFamilyImportService userFamilyImportService) {
         this.userService = userService;
@@ -86,7 +86,7 @@ public class UserController {
             if (user.get().getAge() <= 18) {
                 return ResponseEntity.status(404).body("No kids");
             }
-            return ResponseEntity.status(200).body(userService.findFamiliy(user.get().getFamilyId()).stream().map(userMapper::entityToDto));
+            return ResponseEntity.status(200).body(userService.findFamily(user.get().getFamilyId(), user.get().getId()).stream().map(userMapper::entityToDto));
         }
 
         return ResponseEntity.status(404).body("User not found");

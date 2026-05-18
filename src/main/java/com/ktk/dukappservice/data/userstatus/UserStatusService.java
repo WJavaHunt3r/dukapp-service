@@ -84,14 +84,12 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         if (sumCredit != null) {
             transactions += sumCredit;
         }
-        if (isCreate) {
-            Optional<UserStatus> lastYearStatus = findByUserId(us.getUser().getId(), us.getSeason().getSeasonYear() - 1);
-            if (lastYearStatus.isPresent()) {
-                int transition = Math.max(lastYearStatus.get().getTransition(), 0);
-                transactions += transition;
-            } else {
-                transactions += us.getUser().getBaseMyShareCredit();
-            }
+        Optional<UserStatus> lastYearStatus = findByUserId(us.getUser().getId(), us.getSeason().getSeasonYear() - 1);
+        if (lastYearStatus.isPresent()) {
+            int transition = Math.max(lastYearStatus.get().getTransition(), 0);
+            transactions += transition;
+        } else {
+            transactions += us.getUser().getBaseMyShareCredit();
         }
         Optional<Goal> userGoal = goalService.findByUserAndSeasonYear(us.getUser(), us.getSeason().getSeasonYear());
         if (userGoal.isEmpty()) return;

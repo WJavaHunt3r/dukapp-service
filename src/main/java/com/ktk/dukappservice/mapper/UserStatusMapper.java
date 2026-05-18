@@ -16,6 +16,7 @@ public class UserStatusMapper {
         UserStatusDto dto = new UserStatusDto();
 
         dto.setId(entity.getId());
+        dto.setUserId(entity.getUser().getId());
         dto.setStatus(entity.getStatus());
         dto.setGoal(entity.getGoal());
         dto.setTransition(entity.getTransition());

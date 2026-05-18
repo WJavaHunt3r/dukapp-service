@@ -1,5 +1,6 @@
 package com.ktk.dukappservice.data.users;
 
+import com.ktk.dukappservice.data.church.ChurchService;
 import com.ktk.dukappservice.data.paceteam.PaceTeam;
 import com.ktk.dukappservice.data.seasons.Season;
 import com.ktk.dukappservice.data.teams.Team;
@@ -8,6 +9,9 @@ import com.ktk.dukappservice.data.transactionitems.TransactionItemService;
 import com.ktk.dukappservice.enums.Account;
 import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.service.BaseService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +24,19 @@ public class UserService extends BaseService<User, Long> {
 
     private final UserRepository userRepository;
     private final TransactionItemService transactionItemService;
+    private final ChurchService churchService;
 
-    public UserService(UserRepository userRepository, TransactionItemService transactionService) {
+    @Value("${app.users.baseChurch}")
+    private Long baseChurch;
+
+    public UserService(UserRepository userRepository, TransactionItemService transactionService, ChurchService churchService) {
         this.userRepository = userRepository;
         this.transactionItemService = transactionService;
+        this.churchService = churchService;
+    }
+
+    public Page<User> fetchByQuery(Long familyId, Long spouseId, Long teamId, Long churchId, String keyword, Pageable pageable) {
+        return userRepository.fetchByQuery(familyId, spouseId, teamId, churchId, keyword, pageable);
     }
 
     public Optional<User> findByUsername(String username) {
@@ -52,8 +65,8 @@ public class UserService extends BaseService<User, Long> {
         return userRepository.findAllByRole(role);
     }
 
-    public List<User> findFamiliy(Long familyId) {
-        return userRepository.findFamily(familyId);
+    public List<User> findFamily(Long familyId, Long userId) {
+        return userRepository.findFamily(familyId, userId);
     }
 
     public Iterable<User> findAllByPaceTeam(PaceTeam t, Season s) {
@@ -78,7 +91,7 @@ public class UserService extends BaseService<User, Long> {
 
     public void calculateUserPoints(User u) {
         u.setCurrentMyShareCredit(u.getBaseMyShareCredit());
-        transactionItemService.fetchByQuery(null, null, null, null, null, u.getId(), LocalDate.now().getYear()).forEach(t -> addTransaction(t, u));
+        transactionItemService.fetchByQuery(null, null, null, null, null, u.getId(), LocalDate.now().getYear(), null).forEach(t -> addTransaction(t, u));
         save(u);
     }
 
@@ -101,5 +114,11 @@ public class UserService extends BaseService<User, Long> {
     @Override
     public User createEntity() {
         return new User();
+    }
+
+    @Override
+    public User save(User entity) {
+        churchService.findById(baseChurch).ifPresent(entity::setChurch);
+        return super.save(entity);
     }
 }

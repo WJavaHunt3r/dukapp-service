@@ -106,7 +106,7 @@ public class DukAppSecurityConfig {
                 registry.addMapping("/**").allowedOrigins(
                         "https://dukapp.bcc-ktk.org",
                         "http://localhost:8999",
-                        "http://localhost:50757"
+                        "http://localhost:58148"
                 ).allowedHeaders("*").allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS");
             }
         };
