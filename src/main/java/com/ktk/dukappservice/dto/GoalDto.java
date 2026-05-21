@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.dto;
 
-import com.ktk.dukappservice.data.seasons.Season;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,9 +10,11 @@ import lombok.Setter;
 public class GoalDto {
     private Long id;
 
-    private UserDto user;
+    private Long userId;
 
-    private Season season;
+    private String username;
+
+    private Integer seasonYear;
 
     private Integer goal;
 }

@@ -13,7 +13,6 @@ import com.microsoft.graph.models.odataerrors.ODataError;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -40,13 +39,13 @@ public class ActivityController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getActivities(@Nullable @RequestParam("responsibleId") Long responsibleId,
-                                           @Nullable @RequestParam("employerId") Long employerId,
-                                           @Nullable @RequestParam("registeredInApp") Boolean registeredInApp,
-                                           @Nullable @RequestParam("registeredInMyShare") Boolean registeredInMyShare,
-                                           @Nullable @RequestParam("createUserId") Long createUserId,
-                                           @Nullable @RequestParam("referenceDate") String referenceMonth,
-                                           @Nullable @RequestParam("searchText") String searchText, Pageable pageable) {
+    public ResponseEntity<?> getActivities(@RequestParam(value = "responsibleId", required = false) Long responsibleId,
+                                           @RequestParam(value = "employerId", required = false) Long employerId,
+                                           @RequestParam(value = "registeredInApp", required = false) Boolean registeredInApp,
+                                           @RequestParam(value = "registeredInMyShare", required = false) Boolean registeredInMyShare,
+                                           @RequestParam(value = "createUserId", required = false) Long createUserId,
+                                           @RequestParam(value = "referenceDate", required = false) String referenceMonth,
+                                           @RequestParam(value = "searchText", required = false) String searchText, Pageable pageable) {
         return ResponseEntity.status(200).body(activityService.fetchByQuery(responsibleId, employerId, registeredInApp, registeredInMyShare, createUserId, referenceMonth, searchText, pageable).map((activityMapper::entityToDto)));
     }
 

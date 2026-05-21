@@ -8,10 +8,7 @@ import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.*;
 import com.ktk.dukappservice.enums.Role;
-import com.ktk.dukappservice.security.DukAppDetailsManager;
-import com.ktk.dukappservice.security.JwtResponse;
-import com.ktk.dukappservice.security.JwtUtils;
-import com.ktk.dukappservice.security.PasswordUtils;
+import com.ktk.dukappservice.security.*;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.microsoft.graph.models.odataerrors.ODataError;
 import org.springframework.http.HttpStatus;
@@ -24,10 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.text.Normalizer;
@@ -42,6 +36,7 @@ public class AuthController {
     private final UserService userService;
     private final MicrosoftService microsoftService;
     private final JwtUtils jwtUtils;
+    private final BookingJwtUtils bookingJwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final DukAppDetailsManager detailsManager;
 
@@ -49,11 +44,12 @@ public class AuthController {
                           UserService userService,
                           MicrosoftService microsoftService,
                           JwtUtils jwtUtils,
-                          PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager) {
+                          BookingJwtUtils bookingJwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.microsoftService = microsoftService;
         this.jwtUtils = jwtUtils;
+        this.bookingJwtUtils = bookingJwtUtils;
         this.passwordEncoder = passwordEncoder;
         this.detailsManager = detailsManager;
     }
@@ -145,6 +141,17 @@ public class AuthController {
         UserDetails userDetails = detailsManager.loadUserByUsername(targetUser.getUsername());
         detailsManager.updatePassword(userDetails, newHash);
         return ResponseEntity.ok("Password reset successfully");
+    }
+
+    @GetMapping("/bookingToken")
+    public ResponseEntity<?> resetPassword(@AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> userById = userService.findByUsername(userDetails.getUsername());
+        if (userById.isEmpty()) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        String token = bookingJwtUtils.generateToken(userById.get());
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/sendNewPassword")

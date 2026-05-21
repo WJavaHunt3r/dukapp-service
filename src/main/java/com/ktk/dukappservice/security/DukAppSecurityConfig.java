@@ -89,6 +89,10 @@ public class DukAppSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()
                         .requestMatchers("/api/payments/*").permitAll()
                         .requestMatchers("/api/payments").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/goal").authenticated()
                         .anyRequest().authenticated()
                 )
                 // Spring Boot 4 encourages granular filter ordering

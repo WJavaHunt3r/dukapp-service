@@ -1,28 +1,28 @@
 package com.ktk.dukappservice.data.goals;
 
-import com.ktk.dukappservice.data.seasons.Season;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.service.BaseService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class GoalService extends BaseService<Goal, Long> {
-    private GoalRepository goalRepository;
+    private final GoalRepository goalRepository;
 
     public GoalService(GoalRepository goalRepository) {
         this.goalRepository = goalRepository;
     }
 
-    public Optional<Goal> findByUserAndSeasonYear(User user, Integer year){
+    public Optional<Goal> findByUserAndSeasonYear(User user, Integer year) {
         return goalRepository.findByUserAndSeasonSeasonYearOrUserSpouse(user, year);
     }
 
-    public List<Goal> findBySeason(Season season){
-        return goalRepository.findBySeason(season);
+    public Page<Goal> fetchByQuery(Integer seasonYear, Long userId, Pageable pageable) {
+        return goalRepository.fetchByQuery(seasonYear, userId, pageable);
     }
 
     @Override
@@ -39,6 +39,5 @@ public class GoalService extends BaseService<Goal, Long> {
     public Goal createEntity() {
         return new Goal();
     }
-
 
 }

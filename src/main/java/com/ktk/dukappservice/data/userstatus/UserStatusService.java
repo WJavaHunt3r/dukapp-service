@@ -51,7 +51,7 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         if (season.isEmpty()) {
             return;
         }
-        for (Goal goal : goalService.findBySeason(season.get())) {
+        for (Goal goal : goalService.fetchByQuery(season.get().getSeasonYear(), null, null)) {
             createUserStatus(goal.getUser(), goal.getGoal(), season.get());
         }
     }
