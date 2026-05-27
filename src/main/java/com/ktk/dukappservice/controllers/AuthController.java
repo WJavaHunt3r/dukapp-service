@@ -230,6 +230,11 @@ public class AuthController {
         return ResponseEntity.status(401).body("Google Authentication Failed");
     }
 
+    @GetMapping("/isAlive")
+    public ResponseEntity<?> isAlive() {
+        return ResponseEntity.ok("OK");
+    }
+
     public String normalizeUsername(String firstName, String lastName) {
         String input = (lastName + firstName).toLowerCase();
 

@@ -40,4 +40,10 @@ public class PaceUserRoundController {
         paceUserRoundService.createAllPaceUserRounds(roundService.getLastRound());
         return ResponseEntity.status(200).body("Recalculation successful");
     }
+
+    @GetMapping("/head")
+    public ResponseEntity<?> getHeadData() {
+        int onTrack = paceUserRoundService.getOnTrackCountByRound(roundService.getLastRound());
+        return ResponseEntity.status(200).body(onTrack);
+    }
 }

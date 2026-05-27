@@ -146,6 +146,10 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         userService.save(pur.getUser());
     }
 
+    public int getOnTrackCountByRound(Round r){
+        return repository.countByRoundAndOnTrack(r, true);
+    }
+
     @Override
     protected JpaRepository<PaceUserRound, Long> getRepository() {
         return repository;

@@ -78,7 +78,7 @@ public class TransactionItemsController {
     @PostMapping("/items")
     public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems) {
         transactionItems.forEach(this::addTransaction);
-        transactionServiceUtils.calculateAllTeamStatus();
+//        transactionServiceUtils.calculateAllTeamStatus();
         return ResponseEntity.ok().body("Successfully added");
 
     }

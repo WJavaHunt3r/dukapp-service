@@ -38,12 +38,12 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         return repository.findByUserIdAndSeasonYear(userId, seasonService.findCurrentSeason().getSeasonYear());
     }
 
-    public Page<UserStatus> fetchByQuery(Integer seasonYear, Long teamId, Pageable pageable) {
-        return repository.fetchByQuery(seasonYear, teamId, pageable);
+    public Page<UserStatus> fetchByQuery(Integer seasonYear, Long teamId, String keyword, Pageable pageable) {
+        return repository.fetchByQuery(seasonYear, teamId, keyword, pageable);
     }
 
     public Page<UserStatus> fetchByQuery(Integer seasonYear, Long teamId) {
-        return fetchByQuery(seasonYear, teamId, null);
+        return fetchByQuery(seasonYear, teamId, null, null);
     }
 
     public void createUserStatusForAllUsers(Integer seasonYear) {
@@ -114,4 +114,5 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
     public UserStatus createEntity() {
         return new UserStatus();
     }
+
 }

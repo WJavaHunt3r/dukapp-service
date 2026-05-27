@@ -76,7 +76,7 @@ public class ActivityService extends BaseService<Activity, Long> {
             for (var item : activityItemService.findByActivity(activity.getId())) {
                 createTransactionItem(transaction, createUser, item);
             }
-            transactionServiceUtils.calculateAllTeamStatus();
+//            transactionServiceUtils.calculateAllTeamStatus();
             activity.setRegisteredInApp(true);
         } catch (Exception ignored){
 

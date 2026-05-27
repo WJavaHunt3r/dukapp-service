@@ -7,7 +7,6 @@ import com.ktk.dukappservice.mapper.UserStatusMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.util.annotation.Nullable;
 
 @RestController
 @RequestMapping("/api/userStatus")
@@ -25,9 +24,12 @@ public class UserStatusController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getAllUserStatus(@RequestParam("seasonYear") Integer seasonYear, @Nullable @RequestParam("teamId") Long teamId, Pageable pageable) {
+    public ResponseEntity<?> getAllUserStatus(@RequestParam(value = "seasonYear") Integer seasonYear,
+                                              @RequestParam(value = "teamId", required = false) Long teamId,
+                                              @RequestParam(value = "keyword", required = false) String keyword,
+                                              Pageable pageable) {
         var round = roundService.getLastRound();
-        return ResponseEntity.status(200).body(service.fetchByQuery(seasonYear, teamId, pageable).map((UserStatus entity) -> userStatusMapper.entityToDto(entity, round)));
+        return ResponseEntity.status(200).body(service.fetchByQuery(seasonYear, teamId, keyword, pageable).map((UserStatus entity) -> userStatusMapper.entityToDto(entity, round)));
     }
 
     @GetMapping("/{id}")
