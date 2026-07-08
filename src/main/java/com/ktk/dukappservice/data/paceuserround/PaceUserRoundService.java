@@ -81,7 +81,7 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
     }
 
     public void calculateUserRoundStatus(User u) {
-        calculateUserRoundStatus(roundService.getLastRound(), u);
+        calculateUserRoundStatus(roundService.getCurrentRound(), u);
     }
 
     public void calculateUserRoundStatus(Round r, User u) {
@@ -92,12 +92,12 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
     }
 
     public void createPaceUserRound(User u) {
-        var usr = findByUserAndRound(u, roundService.getLastRound());
+        var usr = findByUserAndRound(u, roundService.getCurrentRound());
         if (usr.isPresent()) {
             calculateUserRoundStatus(usr.get());
             save(usr.get());
         } else {
-            save(createPaceUserRound(u, roundService.getLastRound()));
+            save(createPaceUserRound(u, roundService.getCurrentRound()));
         }
     }
 

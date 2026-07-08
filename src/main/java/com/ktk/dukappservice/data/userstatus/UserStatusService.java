@@ -43,7 +43,7 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
     }
 
     public Page<UserStatus> fetchByQuery(Integer seasonYear, Long teamId) {
-        return fetchByQuery(seasonYear, teamId, null, null);
+        return fetchByQuery(seasonYear, teamId, "", null);
     }
 
     public void createUserStatusForAllUsers(Integer seasonYear) {

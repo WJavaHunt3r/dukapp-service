@@ -64,7 +64,7 @@ public class UserFraKareWeekService extends BaseService<UserFraKareWeek, Long> {
             transactionItemService.deleteById(userFraKareWeek.getTransactionItemId());
             userFraKareWeek.setTransactionItemId(null);
         }
-        transactionServiceUtils.updateUserStatus(roundService.getLastRound(), userFraKareWeek.getUser());
+        transactionServiceUtils.updateUserStatus(roundService.getCurrentRound(), userFraKareWeek.getUser());
         transactionServiceUtils.calculateAllTeamStatus();
 
         return save(userFraKareWeek);
@@ -75,7 +75,7 @@ public class UserFraKareWeekService extends BaseService<UserFraKareWeek, Long> {
         transactionItem.setHours(0);
         transactionItem.setPoints(10);
         transactionItem.setTransactionDate(LocalDate.now());
-        transactionItem.setRound(roundService.getLastRound());
+        transactionItem.setRound(roundService.getCurrentRound());
         transactionItem.setTransactionId(transactionId);
         transactionItem.setCreateDateTime(LocalDateTime.now());
         transactionItem.setCreateUser(userService.findAllByRole(Role.ADMIN).iterator().next());

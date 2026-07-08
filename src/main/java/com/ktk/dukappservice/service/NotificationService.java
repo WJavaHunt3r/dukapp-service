@@ -36,7 +36,7 @@ public class NotificationService {
 
     @Scheduled(cron = "0 0 17 * * TUE")
     public void sendOnTrackEmails() {
-        Round currentRound = roundService.getLastRound();
+        Round currentRound = roundService.getCurrentRound();
         int currentYear = LocalDate.now().getYear();
 
         log.info("Starting scheduled on-track email notification for year: {}", currentYear);

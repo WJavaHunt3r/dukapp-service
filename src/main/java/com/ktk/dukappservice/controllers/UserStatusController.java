@@ -28,7 +28,7 @@ public class UserStatusController {
                                               @RequestParam(value = "teamId", required = false) Long teamId,
                                               @RequestParam(value = "keyword", required = false) String keyword,
                                               Pageable pageable) {
-        var round = roundService.getLastRound();
+        var round = roundService.getCurrentRound();
         return ResponseEntity.status(200).body(service.fetchByQuery(seasonYear, teamId, keyword, pageable).map((UserStatus entity) -> userStatusMapper.entityToDto(entity, round)));
     }
 
@@ -38,7 +38,7 @@ public class UserStatusController {
         if (userStatus.isEmpty()) {
             return ResponseEntity.status(404).body("No userStatus with id: " + id);
         }
-        return ResponseEntity.status(200).body(userStatusMapper.entityToDto(userStatus.get(), roundService.getLastRound()));
+        return ResponseEntity.status(200).body(userStatusMapper.entityToDto(userStatus.get(), roundService.getCurrentRound()));
     }
 
     @GetMapping("/user/{userId}")
@@ -48,7 +48,7 @@ public class UserStatusController {
             return ResponseEntity.status(404).body("No userStatus with userId: " + userId);
         }
 
-        return ResponseEntity.status(200).body(userStatus.map((UserStatus entity) -> userStatusMapper.entityToDto(entity, roundService.getLastRound())));
+        return ResponseEntity.status(200).body(userStatus.map((UserStatus entity) -> userStatusMapper.entityToDto(entity, roundService.getCurrentRound())));
     }
 
     @PostMapping("/setUserStatus")

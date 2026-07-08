@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.security;
 
-import com.ktk.dukappservice.data.users.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,16 +27,8 @@ import java.util.Map;
 @Configuration
 public class DukAppSecurityConfig {
 
-    private final UserService userService;
-
-    public DukAppSecurityConfig(UserService userService) {
-        this.userService = userService;
+    public DukAppSecurityConfig() {
     }
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return new DukAppDetailsManager(userService);
-//    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -109,8 +100,7 @@ public class DukAppSecurityConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**").allowedOrigins(
                         "https://dukapp.bcc-ktk.org",
-                        "http://localhost:8999",
-                        "http://localhost:58148"
+                        "http://localhost:8999"
                 ).allowedHeaders("*").allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS");
             }
         };
