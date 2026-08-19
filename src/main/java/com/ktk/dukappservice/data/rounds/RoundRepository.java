@@ -19,11 +19,11 @@ public interface RoundRepository extends JpaRepository<Round, Long> {
     Round getLastRound();
 
     @Query(value = "SELECT r FROM Round r join fetch r.season where " +
-            " (r.activeRound = ?1 OR ?1 IS NULL) " +
-            " AND (r.season.seasonYear = ?2 OR ?2 IS NULL) ",
+            " (r.activeRound = ?2 OR ?2 IS NULL) " +
+            " AND (r.season.seasonYear = ?1 OR ?1 IS NULL) ",
             countQuery = "SELECT r FROM Round r where " +
-                    " (r.activeRound = ?1 OR ?1 IS NULL) " +
-                    " AND (r.season.seasonYear = ?2 OR ?2 IS NULL) ")
+                    " (r.activeRound = ?2 OR ?2 IS NULL) " +
+                    " AND (r.season.seasonYear = ?1 OR ?1 IS NULL) ")
     Page<Round> fetchByQuery(int year, boolean isActive, Pageable pageable);
 
 }

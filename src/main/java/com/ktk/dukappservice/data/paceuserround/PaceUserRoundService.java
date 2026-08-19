@@ -114,7 +114,7 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
     }
 
     private int calculateCurrRoundMyShareGoal(Round round, User u) {
-        return userStatusService.findByUserId(u.getId(), round.getSeason().getSeasonYear())
+        return userStatusService.findByUserIdAndSeason(u.getId(), round.getSeason().getSeasonYear())
                 .map(userStatus -> {
                     double goalPercentage = round.getLocalMyShareGoal() / 100.0;
                     int targetAmount = (int) Math.round(userStatus.getGoal() * goalPercentage);
@@ -124,7 +124,7 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
 
     private void calculateUserRoundStatus(PaceUserRound pur) {
         // 1. Fetch the necessary data
-        UserStatus status = userStatusService.findByUserId(pur.getUser().getId(), pur.getRound().getSeason().getSeasonYear())
+        UserStatus status = userStatusService.findByUserIdAndSeason(pur.getUser().getId(), pur.getRound().getSeason().getSeasonYear())
                 .orElseThrow(() -> new RuntimeException("Status not found"));
 
         Integer credits = transactionItemService.sumCreditsByUserAndRound(pur.getUser(), pur.getRound());

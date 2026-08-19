@@ -30,11 +30,11 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         this.seasonService = seasonService;
     }
 
-    public Optional<UserStatus> findByUserId(Long userId, Integer seasonYear) {
+    public Optional<UserStatus> findByUserIdAndSeason(Long userId, Integer seasonYear) {
         return repository.findByUserIdAndSeasonYear(userId, seasonYear);
     }
 
-    public Optional<UserStatus> findByUserId(Long userId) {
+    public Optional<UserStatus> findByUserIdAndSeason(Long userId) {
         return repository.findByUserIdAndSeasonYear(userId, seasonService.findCurrentSeason().getSeasonYear());
     }
 
@@ -57,7 +57,7 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
     }
 
     public void createUserStatus(User u, Integer goal, Season season) {
-        if (findByUserId(u.getId(), season.getSeasonYear()).isEmpty()) {
+        if (findByUserIdAndSeason(u.getId(), season.getSeasonYear()).isEmpty()) {
             UserStatus status = createEntity();
             status.setUser(u);
             status.setGoal(goal);
@@ -67,11 +67,11 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
     }
 
     public void calculateUserStatus(User u, Integer goal) {
-        findByUserId(u.getId()).ifPresentOrElse((e) -> calculateUserStatus(e, true), () -> createUserStatus(u, goal, seasonService.findCurrentSeason()));
+        findByUserIdAndSeason(u.getId()).ifPresentOrElse((e) -> calculateUserStatus(e, true), () -> createUserStatus(u, goal, seasonService.findCurrentSeason()));
     }
 
     public void calculateUserStatus(User u, Season season) {
-        findByUserId(u.getId(), season.getSeasonYear()).ifPresent((e) -> calculateUserStatus(e, true));
+        findByUserIdAndSeason(u.getId(), season.getSeasonYear()).ifPresent((e) -> calculateUserStatus(e, true));
     }
 
     public void calculateUserStatus(UserStatus us) {
@@ -84,7 +84,7 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         if (sumCredit != null) {
             transactions += sumCredit;
         }
-        Optional<UserStatus> lastYearStatus = findByUserId(us.getUser().getId(), us.getSeason().getSeasonYear() - 1);
+        Optional<UserStatus> lastYearStatus = findByUserIdAndSeason(us.getUser().getId(), us.getSeason().getSeasonYear() - 1);
         if (lastYearStatus.isPresent()) {
             int transition = Math.max(lastYearStatus.get().getTransition(), 0);
             transactions += transition;

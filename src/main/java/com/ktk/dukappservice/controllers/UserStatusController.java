@@ -43,7 +43,7 @@ public class UserStatusController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserStatusByUser(@PathVariable Long userId, @RequestParam("seasonYear") Integer seasonYear) {
-        var userStatus = service.findByUserId(userId, seasonYear);
+        var userStatus = service.findByUserIdAndSeason(userId, seasonYear);
         if (userStatus.isEmpty()) {
             return ResponseEntity.status(404).body("No userStatus with userId: " + userId);
         }

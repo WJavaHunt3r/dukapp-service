@@ -72,10 +72,12 @@ public class GoalController {
         Goal goal = new Goal();
         goal.setUser(user.get());
         goal.setSeason(season.get());
-        userRoundService.createPaceUserRound(user.get());
+        Goal goalEntity  = goalService.save(goalMapper.dtoToEntity(goalDto, goal));
         userStatusService.createUserStatus(user.get(), goalDto.getGoal(), season.get());
+        userRoundService.createPaceUserRound(user.get());
 
-        return ResponseEntity.status(200).body(goalMapper.entityToDto(goalService.save(goalMapper.dtoToEntity(goalDto, goal))));
+
+        return ResponseEntity.status(200).body(goalMapper.entityToDto(goalEntity));
     }
 
     @PutMapping("/{id}")
@@ -109,7 +111,7 @@ public class GoalController {
         }
         if (goalService.existsById(id)) {
             Optional<Goal> g = goalService.findById(id);
-            Optional<UserStatus> us = userStatusService.findByUserId(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());
+            Optional<UserStatus> us = userStatusService.findByUserIdAndSeason(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());
             us.ifPresent(u -> userStatusService.deleteById(u.getId()));
 //            userRoundService.deleteByUserAndSeason(g.get().getUser(), g.get().getSeason());
             goalService.deleteById(id);

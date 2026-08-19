@@ -18,7 +18,7 @@ public class RoundController {
 
     @GetMapping()
     public ResponseEntity<?> getRounds(@RequestParam(value = "seasonYear", required = false) Integer seasonYear,
-                                       @RequestParam(value = "activeRounds", required = false) Boolean activeRounds, Pageable pageable) {
+                                       @RequestParam(value = "activeRound", required = false) Boolean activeRounds, Pageable pageable) {
         return ResponseEntity.status(200).body(roundService.fetchByQuery(seasonYear, activeRounds, pageable));
     }
 

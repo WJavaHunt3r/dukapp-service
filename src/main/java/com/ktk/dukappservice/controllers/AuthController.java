@@ -39,12 +39,13 @@ public class AuthController {
     private final BookingJwtUtils bookingJwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final DukAppDetailsManager detailsManager;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserService userService,
                           MicrosoftService microsoftService,
                           JwtUtils jwtUtils,
-                          BookingJwtUtils bookingJwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager) {
+                          BookingJwtUtils bookingJwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.microsoftService = microsoftService;
@@ -52,6 +53,7 @@ public class AuthController {
         this.bookingJwtUtils = bookingJwtUtils;
         this.passwordEncoder = passwordEncoder;
         this.detailsManager = detailsManager;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/login")
@@ -70,12 +72,13 @@ public class AuthController {
                 (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
 
         String jwt = jwtUtils.generateToken(userDetails.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), roles));
+        return ResponseEntity.ok(new JwtResponse(jwt, refreshToken.getToken(), userDetails.getUsername(), roles));
     }
 
     @PostMapping("/register")
@@ -106,7 +109,8 @@ public class AuthController {
 
         // 3. Optional: Return a JWT immediately so they don't have to log in right after registering
         String jwt = jwtUtils.generateToken(user.getUsername());
-        return ResponseEntity.ok(new JwtResponse(jwt, user.getUsername(), List.of(Role.USER.name())));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+        return ResponseEntity.ok(new JwtResponse(jwt, refreshToken.getToken(), user.getUsername(), List.of(Role.USER.name())));
     }
 
     @PostMapping("/changePassword")
@@ -222,12 +226,27 @@ public class AuthController {
 
                 // 4. Generate YOUR app's JWT
                 String jwt = jwtUtils.generateToken(user.getUsername());
-                return ResponseEntity.ok(new JwtResponse(jwt, user.getUsername(), List.of(user.getRole().name())));
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+                return ResponseEntity.ok(new JwtResponse(jwt, refreshToken.getToken(), user.getUsername(), List.of(user.getRole().name())));
             }
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid Google Token");
         }
         return ResponseEntity.status(401).body("Google Authentication Failed");
+    }
+
+    @PostMapping("/refreshtoken")
+    public ResponseEntity<?> refreshtoken(@RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.refreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtUtils.generateToken(user.getUsername());
+                    return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Refresh token is not in database!"));
     }
 
     @GetMapping("/isAlive")
@@ -248,5 +267,22 @@ public class AuthController {
         // 3. Optional: Remove anything else that isn't a-z or 0-9
         // (like spaces, hyphens, or special symbols)
         return result.replaceAll("[^a-z0-9]", "");
+    }
+
+    public record TokenRefreshRequest(String refreshToken) {
+    }
+
+    public record TokenRefreshResponse(String accessToken, String refreshToken, String tokenType) {
+        public TokenRefreshResponse(String accessToken, String refreshToken) {
+            this(accessToken, refreshToken, "Bearer");
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@RequestParam(name = "refreshToken", required = true) String refreshToken, Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            refreshTokenService.logoutDevice(refreshToken);
+        }
+        return ResponseEntity.ok("Logged out successfully.");
     }
 }
