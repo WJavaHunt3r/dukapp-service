@@ -13,11 +13,12 @@ import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.enums.TransactionType;
 import com.ktk.dukappservice.mapper.TransactionItemMapper;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -48,14 +49,14 @@ public class TransactionItemsController {
             return ResponseEntity.status(400).body("No transaction found with id: " + transactionItem.getTransactionId());
         }
 
-        Optional<User> user = userService.findById(transactionItem.getUser().getId());
+        Optional<User> user = userService.findById(transactionItem.getUserId());
         if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user found with id: " + transactionItem.getUser().getId());
+            return ResponseEntity.status(400).body("No user found with id: " + transactionItem.getUserId());
         }
 
-        Optional<Round> round = roundService.findById(transactionItem.getRound().getId());
+        Optional<Round> round = roundService.findById(transactionItem.getRoundId());
         if (round.isEmpty()) {
-            return ResponseEntity.status(400).body("No round found with id: " + transactionItem.getRound().getId());
+            return ResponseEntity.status(400).body("No round found with id: " + transactionItem.getRoundId());
         }
 
         Optional<User> createUser = userService.findById(transactionItem.getCreateUserId());
@@ -68,15 +69,16 @@ public class TransactionItemsController {
         TransactionItem entity = new TransactionItem();
         entity.setCreateUser(createUser.get());
         entity.setUser(user.get());
+        entity.setRound(round.get());
         transactionItemService.save(modelMapper.dtoToEntity(transactionItem, entity));
-        transactionServiceUtils.updateUserStatus(transactionItem.getRound(), user.get());
+        transactionServiceUtils.updateUserStatus(round.get(), user.get());
         return ResponseEntity.status(200).build();
     }
 
     @PostMapping("/items")
     public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems) {
         transactionItems.forEach(this::addTransaction);
-        transactionServiceUtils.calculateAllTeamStatus();
+//        transactionServiceUtils.calculateAllTeamStatus();
         return ResponseEntity.ok().body("Successfully added");
 
     }
@@ -109,27 +111,9 @@ public class TransactionItemsController {
                                                  @Nullable @RequestParam("transactionType") TransactionType transactionType,
                                                  @Nullable @RequestParam("seasonYear") Integer seasonYear,
                                                  @Nullable @RequestParam("startDate") LocalDate startDate,
-                                                 @Nullable @RequestParam("endDate") LocalDate endDate) {
-//        if (userId != null) {
-//            Optional<User> user = userService.findById(userId);
-//            if (user.isEmpty()) {
-//                return ResponseEntity.status(404).body("No user found with id: " + userId);
-//            }
-//            if (roundId != null) {
-//                Optional<Round> round = roundService.findById(roundId);
-//                if (round.isEmpty()) {
-//                    return ResponseEntity.status(404).body("No round with id:" + roundId);
-//                }
-//                return ResponseEntity.ok(StreamSupport.stream(transactionItemService.findAllByUserAndRound(user.get(), round.get()).spliterator(), false).map(modelMapper::entityToDto));
-//            }
-//            return ResponseEntity.ok(StreamSupport.stream(transactionItemService.findAllByUser(user.get()).spliterator(), false).map(modelMapper::entityToDto));
-//        }
-//        if (transactionId != null) {
-//            return ResponseEntity.ok(StreamSupport.stream(transactionItemService.findAllByTransactionId(transactionId).spliterator(), false).map(modelMapper::entityToDto));
-//        }
-        return ResponseEntity.ok(transactionItemService.fetchByQuery(transactionType, startDate, endDate, transactionId, roundId, userId, seasonYear).stream().map(modelMapper::entityToDto));
-
-//        return ResponseEntity.status(400).body("Empty parameters");
+                                                 @Nullable @RequestParam("endDate") LocalDate endDate,
+                                                 Pageable pageable) {
+        return ResponseEntity.ok(transactionItemService.fetchByQuery(transactionType, startDate, endDate, transactionId, roundId, userId, seasonYear, pageable).map(modelMapper::entityToDto));
 
     }
 }

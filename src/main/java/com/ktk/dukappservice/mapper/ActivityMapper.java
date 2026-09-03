@@ -1,12 +1,8 @@
 package com.ktk.dukappservice.mapper;
 
 import com.ktk.dukappservice.data.activity.Activity;
-import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.dto.ActivityDto;
-import com.ktk.dukappservice.dto.UserDto;
-import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeMap;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,24 +10,20 @@ import java.time.LocalDateTime;
 @Service
 public class ActivityMapper extends BaseMapper<Activity, ActivityDto> {
 
-    protected ActivityMapper(ModelMapper modelMapper, UserMapper userMapper) {
+    protected ActivityMapper(ModelMapper modelMapper) {
         super(modelMapper);
-        TypeMap<Activity, ActivityDto> propertyMapper = modelMapper.createTypeMap(Activity.class, ActivityDto.class);
-        Converter<User, UserDto> userToDto = c -> userMapper.entityToDto(c.getSource());
-        propertyMapper.addMappings(
-                mapper -> mapper.using(userToDto).map(Activity::getCreateUser, ActivityDto::setCreateUser)
-        );
-        propertyMapper.addMappings(
-                mapper -> mapper.using(userToDto).map(Activity::getEmployer, ActivityDto::setEmployer)
-        );
-        propertyMapper.addMappings(
-                mapper -> mapper.using(userToDto).map(Activity::getResponsible, ActivityDto::setResponsible)
-        );
     }
 
     @Override
     public ActivityDto entityToDto(Activity entity) {
-        return modelMapper.map(entity, ActivityDto.class);
+        var dto = modelMapper.map(entity, ActivityDto.class);
+        dto.setCreateUserId(entity.getCreateUser().getId());
+        dto.setCreateUserName(entity.getCreateUser().getFullName());
+        dto.setEmployerId(entity.getEmployer().getId());
+        dto.setEmployerName(entity.getEmployer().getFullName());
+        dto.setResponsibleId(entity.getResponsible().getId());
+        dto.setResponsibleName(entity.getResponsible().getFullName());
+        return dto;
     }
 
     @Override

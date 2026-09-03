@@ -1,32 +1,34 @@
 package com.ktk.dukappservice.mapper;
 
-import com.ktk.dukappservice.data.rounds.RoundService;
+import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
 import com.ktk.dukappservice.dto.UserStatusDto;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserStatusMapper extends BaseMapper<UserStatus, UserStatusDto> {
-    private final RoundService roundService;
+public class UserStatusMapper {
 
-    public UserStatusMapper(ModelMapper modelMapper, RoundService roundService) {
-        super(modelMapper);
-        this.roundService = roundService;
+    public UserStatusMapper() {
     }
 
-    @Override
-    public UserStatusDto entityToDto(UserStatus entity) {
-        UserStatusDto dto = modelMapper.map(entity, UserStatusDto.class);
-        dto.setOnTrack(entity.getStatus() * 100 >= roundService.getLastRound().getMyShareGoal());
-        dto.setLocalOnTrack(entity.getStatus() * 100 >= roundService.getLastRound().getLocalMyShareGoal());
+    public UserStatusDto entityToDto(UserStatus entity, Round round) {
+
+        UserStatusDto dto = new UserStatusDto();
+
+        dto.setId(entity.getId());
+        dto.setUserId(entity.getUser().getId());
+        dto.setStatus(entity.getStatus());
+        dto.setGoal(entity.getGoal());
+        dto.setTransition(entity.getTransition());
+        dto.setTransactions(entity.getTransactions());
+        dto.setOnTrack(entity.getStatus() * 100 >= round.getMyShareGoal());
+        dto.setLocalOnTrack(entity.getStatus() * 100 >= round.getLocalMyShareGoal());
+        dto.setName(entity.getUser().getFullName());
+        dto.setSeasonYear(entity.getSeason().getSeasonYear());
+        double roundGoal = round.getMyShareGoal() / 100 * entity.getGoal();
+        int toOnTrack = (int) roundGoal - entity.getTransactions();
+        dto.setToOnTrack(Math.max(toOnTrack, 0));
         return dto;
     }
 
-    @Override
-    public UserStatus dtoToEntity(UserStatusDto dto, UserStatus entity) {
-        UserStatus userStatus = modelMapper.map(dto, UserStatus.class);
-        userStatus.setUser(entity.getUser());
-        return userStatus;
-    }
 }

@@ -1,8 +1,8 @@
 package com.ktk.dukappservice.security;
 
-import com.ktk.dukappservice.data.users.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -27,16 +27,8 @@ import java.util.Map;
 @Configuration
 public class DukAppSecurityConfig {
 
-    private final UserService userService;
-
-    public DukAppSecurityConfig(UserService userService) {
-        this.userService = userService;
+    public DukAppSecurityConfig() {
     }
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return new DukAppDetailsManager(userService);
-//    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -84,7 +76,15 @@ public class DukAppSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/donations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()
+                        .requestMatchers("/api/payments/*").permitAll()
+                        .requestMatchers("/api/payments").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/goal").authenticated()
+                        .anyRequest().authenticated()
                 )
                 // Spring Boot 4 encourages granular filter ordering
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -100,7 +100,7 @@ public class DukAppSecurityConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**").allowedOrigins(
                         "https://dukapp.bcc-ktk.org",
-                        "http://localhost:8999" // Match your flutter web port
+                        "http://localhost:8999"
                 ).allowedHeaders("*").allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS");
             }
         };

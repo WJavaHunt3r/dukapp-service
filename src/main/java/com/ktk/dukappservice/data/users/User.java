@@ -1,6 +1,7 @@
 package com.ktk.dukappservice.data.users;
 
 import com.ktk.dukappservice.data.BaseEntity;
+import com.ktk.dukappservice.data.church.Church;
 import com.ktk.dukappservice.data.paceteam.PaceTeam;
 import com.ktk.dukappservice.data.teams.Team;
 import com.ktk.dukappservice.enums.Role;
@@ -19,7 +20,9 @@ import java.time.Period;
 @Getter
 @Setter
 @Entity
-@Table(name = "USERS")
+@Table(name = "USERS", indexes = {
+        @Index(name = "idx_username", columnList = "USERNAME", unique = true)
+})
 @FieldNameConstants
 public class User extends BaseEntity<User, Long> {
 
@@ -47,6 +50,10 @@ public class User extends BaseEntity<User, Long> {
     @JoinColumn(name = "PACE_TEAMS")
     private PaceTeam paceTeam;
 
+    @ManyToOne
+    @JoinColumn(name = "CHURCH")
+    private Church church;
+
     @Size(max = 30)
     @Column(name = "USERNAME", length = 30)
     @NotNull
@@ -65,8 +72,7 @@ public class User extends BaseEntity<User, Long> {
     private Role role;
 
     @Column(name = "MYSHARE_ID")
-    @NotNull
-    private long myShareID;
+    private Long myShareID;
 
     @Column(name = "BASE_MYSHARE_CREDIT")
     private Integer baseMyShareCredit;

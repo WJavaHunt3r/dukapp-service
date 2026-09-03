@@ -3,11 +3,11 @@ package com.ktk.dukappservice.data.camps;
 import com.ktk.dukappservice.data.seasons.Season;
 import com.ktk.dukappservice.data.seasons.SeasonService;
 import com.ktk.dukappservice.service.BaseService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,8 +26,8 @@ public class CampService extends BaseService<Camp, Long> {
         return campRepository;
     }
 
-    public List<Camp> findAllBySeason(Season season) {
-        return campRepository.findAllBySeason(season);
+    public Iterable<Camp> fetchByQuery(Integer seasonYear, Pageable pageable) {
+        return campRepository.fetchByQuery(seasonYear, pageable);
     }
 
     @Override

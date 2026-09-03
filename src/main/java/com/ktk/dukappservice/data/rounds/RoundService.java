@@ -2,6 +2,7 @@ package com.ktk.dukappservice.data.rounds;
 
 import com.ktk.dukappservice.data.seasons.Season;
 import com.ktk.dukappservice.service.BaseService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +14,26 @@ import java.util.Optional;
 @Service
 public class RoundService extends BaseService<Round, Long> {
 
-    private RoundRepository roundRepository;
+    private final RoundRepository roundRepository;
 
     public RoundService(RoundRepository roundRepository) {
         this.roundRepository = roundRepository;
     }
 
     public Iterable<Round> findAllByRoundYear(int year) {
-        return roundRepository.findAllBySeasonSeasonYearAndActiveRound(year, true);
+        return fetchByQuery(year, true, null);
+    }
+
+    public Iterable<Round> fetchByQuery(int year, boolean isActive, Pageable pageable) {
+        return roundRepository.fetchByQuery(year, isActive, pageable);
     }
 
     public Optional<Round> findRoundByDate(LocalDateTime dateTime) {
         return roundRepository.findRoundByDate(dateTime);
     }
 
-    public Round getLastRound() {
-        return findRoundByDate(LocalDateTime.now()).orElse(roundRepository.getLastRound(LocalDate.now().getYear()));
+    public Round getCurrentRound() {
+        return roundRepository.getLastRound();
     }
 
     @Override
@@ -65,11 +70,9 @@ public class RoundService extends BaseService<Round, Long> {
             r.setSamvirkOnTrackPoints(0);
             r.setSamvirkMaxPoints(0);
 
-            r.setMyShareGoal(previousRound.get().getMyShareGoal() + 7.0);
-            previousRound.ifPresentOrElse(
-                    p -> r.setLocalMyShareGoal(p.getLocalMyShareGoal() + 10),
-                    () -> r.setLocalMyShareGoal(r.getMyShareGoal()));
-            r.setRoundNumber(weekNumber + 1);
+            r.setMyShareGoal((double) (weekNumber * 11));
+            r.setLocalMyShareGoal((double) (weekNumber * 11));
+            r.setRoundNumber(LocalDate.now().getMonthValue());
             r.setSeason(season);
             r.setUserRoundsCreated(false);
             r.setSamvirkGoal(0);

@@ -12,14 +12,15 @@ import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.dto.GoalDto;
 import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.GoalMapper;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/api/goal")
@@ -41,23 +42,6 @@ public class GoalController {
         this.userStatusService = userStatusService;
     }
 
-    @GetMapping("/userSeasonGoal")
-    public ResponseEntity<?> getUserSeasonGoal(@RequestParam("userId") Long userId, @RequestParam("seasonYear") Integer seasonYear) {
-        var user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user with given id: " + userId);
-        }
-        Optional<Season> season = seasonService.findBySeasonYear(seasonYear);
-        if (season.isEmpty()) {
-            return ResponseEntity.status(404).body("No season with given id: " + seasonYear);
-        }
-        Optional<Goal> goal = goalService.findByUserAndSeasonYear(user.get(), seasonYear);
-        if (goal.isEmpty()) {
-            return ResponseEntity.status(404).body("No goal found with userId: " + userId + " in season: " + seasonYear);
-        }
-        return ResponseEntity.status(200).body(goalMapper.entityToDto(goal.get()));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getGoalById(@PathVariable Long id) {
         Optional<Goal> goal = goalService.findById(id);
@@ -68,29 +52,32 @@ public class GoalController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getAllGoals(@Nullable @RequestParam("seasonYear") Integer seasonYear) {
-        if (seasonYear == null) {
-            return ResponseEntity.status(200).body(StreamSupport.stream(goalService.findAll().spliterator(), false).map(goalMapper::entityToDto));
-        }
-        Optional<Season> season = seasonService.findBySeasonYear(seasonYear);
-        if (season.isEmpty()) {
-            return ResponseEntity.status(404).body("No season with year: " + seasonYear);
-        }
-        List<Goal> goals = goalService.findBySeason(season.get());
-        return ResponseEntity.status(200).body(goals.stream().map(goalMapper::entityToDto));
+    public ResponseEntity<?> getAllGoals(@RequestParam(value = "seasonYear", required = false) Integer seasonYear,
+                                         @RequestParam(value = "userId", required = false) Long userId,
+                                         Pageable pageable) {
+        Page<Goal> goals = goalService.fetchByQuery(seasonYear, userId, pageable);
+        return ResponseEntity.status(200).body(goals.map(goalMapper::entityToDto));
     }
 
     @PostMapping()
-    public ResponseEntity<?> saveGoal(@Valid @RequestBody GoalDto goalDto) {
-        Optional<User> user = userService.findById(goalDto.getUser().getId());
-        if (user.isEmpty() || goalService.findByUserAndSeasonYear(user.get(), goalDto.getSeason().getSeasonYear()).isPresent()) {
-            return ResponseEntity.status(404).body("No user found with id: " + goalDto.getUser().getId() + ". Or User already has a goal.");
+    public ResponseEntity<?> saveGoal(@Valid @RequestBody GoalDto goalDto, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> user = userService.findById(goalDto.getUserId());
+        if (user.isEmpty() || !goalService.fetchByQuery(goalDto.getSeasonYear(), goalDto.getUserId(), null).isEmpty()) {
+            return ResponseEntity.status(404).body("No user found with id: " + goalDto.getUserId() + ". Or User already has a goal.");
+        }
+        Optional<Season> season = seasonService.findBySeasonYear(goalDto.getSeasonYear());
+        if (season.isEmpty()) {
+            return ResponseEntity.status(404).body("No Season found with the year: " + goalDto.getSeasonYear());
         }
         Goal goal = new Goal();
         goal.setUser(user.get());
+        goal.setSeason(season.get());
+        Goal goalEntity  = goalService.save(goalMapper.dtoToEntity(goalDto, goal));
+        userStatusService.createUserStatus(user.get(), goalDto.getGoal(), season.get());
         userRoundService.createPaceUserRound(user.get());
-        userStatusService.createUserStatus(user.get(), goalDto.getGoal(), goalDto.getSeason());
-        return ResponseEntity.status(200).body(goalMapper.entityToDto(goalService.save(goalMapper.dtoToEntity(goalDto, goal))));
+
+
+        return ResponseEntity.status(200).body(goalMapper.entityToDto(goalEntity));
     }
 
     @PutMapping("/{id}")
@@ -99,7 +86,7 @@ public class GoalController {
         if (user.isEmpty()) {
             return ResponseEntity.status(404).body("No user found with id: " + userId);
         }
-        if (user.get().getRole() == Role.ADMIN) {
+//        if (user.get().getRole() == Role.ADMIN) {
             Optional<Goal> goal = goalService.findById(id);
             if (goal.isEmpty() || !goalDto.getId().equals(id)) {
                 return ResponseEntity.status(404).body("Goal not found with id: " + id);
@@ -109,8 +96,8 @@ public class GoalController {
             userRoundService.calculateUserRoundStatus(entity.getUser());
             userStatusService.calculateUserStatus(goal.get().getUser(), goal.get().getGoal());
             return ResponseEntity.status(200).body(goalMapper.entityToDto(entity));
-        }
-        return ResponseEntity.status(404).body("User not allowed to change this goal");
+//        }
+//        return ResponseEntity.status(404).body("User not allowed to change this goal");
     }
 
     @DeleteMapping("/{id}")
@@ -124,7 +111,7 @@ public class GoalController {
         }
         if (goalService.existsById(id)) {
             Optional<Goal> g = goalService.findById(id);
-            Optional<UserStatus> us = userStatusService.findByUserId(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());
+            Optional<UserStatus> us = userStatusService.findByUserIdAndSeason(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());
             us.ifPresent(u -> userStatusService.deleteById(u.getId()));
 //            userRoundService.deleteByUserAndSeason(g.get().getUser(), g.get().getSeason());
             goalService.deleteById(id);

@@ -43,7 +43,7 @@ public class TeamRoundService extends BaseService<TeamRound, Long> {
     }
 
     private void calculateTeamRoundPoints() {
-        for (TeamRound tr : teamRoundRepository.findAllByRound(roundService.getLastRound())) {
+        for (TeamRound tr : teamRoundRepository.findAllByRound(roundService.getCurrentRound())) {
 
             if (!tr.getRound().getUserRoundsCreated()) {
                 userRoundService.getUserRoundsOrCreate(tr.getRound());

@@ -2,40 +2,33 @@ package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/round")
 public class RoundController {
-    private RoundService roundService;
+    private final RoundService roundService;
 
     public RoundController(RoundService roundService) {
         this.roundService = roundService;
     }
 
     @GetMapping()
-    public ResponseEntity getRounds(@Nullable @RequestParam("seasonYear") Integer seasonYear, @Nullable @RequestParam("activeRounds") Boolean activeRounds) {
-        if (seasonYear != null) {
-            return ResponseEntity.status(200).body(roundService.findAllByRoundYear(seasonYear));
-        }
-        return ResponseEntity.status(200).body(roundService.findAll());
+    public ResponseEntity<?> getRounds(@RequestParam(value = "seasonYear", required = false) Integer seasonYear,
+                                       @RequestParam(value = "activeRound", required = false) Boolean activeRounds, Pageable pageable) {
+        return ResponseEntity.status(200).body(roundService.fetchByQuery(seasonYear, activeRounds, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getRound(@Nullable @PathVariable Long id) {
-        if (id != null) {
-            var round = roundService.findById(id);
-            if (round.isEmpty()) {
-                return ResponseEntity.status(404).body("No round with id: " + id);
-            }
-            return ResponseEntity.status(200).body(round.get());
+    public ResponseEntity<?> getRound(@PathVariable Long id) {
+        var round = roundService.findById(id);
+        if (round.isEmpty()) {
+            return ResponseEntity.status(404).body("No round with id: " + id);
         }
-        return ResponseEntity.status(200).body(roundService.findRoundByDate(LocalDateTime.now()));
+        return ResponseEntity.status(200).body(round.get());
     }
 
     @PostMapping()
@@ -53,6 +46,6 @@ public class RoundController {
 
     @GetMapping("/currentRound")
     public ResponseEntity getCurrentRound() {
-        return ResponseEntity.status(200).body(roundService.findRoundByDate(LocalDateTime.now()));
+        return ResponseEntity.status(200).body(roundService.getCurrentRound());
     }
 }

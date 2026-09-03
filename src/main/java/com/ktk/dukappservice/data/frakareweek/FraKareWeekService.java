@@ -53,7 +53,7 @@ public class FraKareWeekService extends BaseService<FraKareWeek, Long> {
         return repository.fetchByQuery(year, weekNumber);
     }
 
-    @Scheduled(cron = "0 0 7 * * MON")
+//    @Scheduled(cron = "0 0 7 * * MON")
 //    @Scheduled(cron = "0 9 21 * * MON")
     public void createFraKareWeek() {
         LocalDate date = LocalDate.now();

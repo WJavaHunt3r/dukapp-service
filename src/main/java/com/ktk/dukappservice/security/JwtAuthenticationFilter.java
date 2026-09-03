@@ -11,16 +11,18 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
-    private final UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils, UserService userService) {
+    private final DukAppDetailsManager dukAppDetailsManager;
+
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, DukAppDetailsManager dukAppDetailsManager) {
         this.jwtUtils = jwtUtils;
-        this.userService = userService;
+        this.dukAppDetailsManager = dukAppDetailsManager;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(7);
             if (jwtUtils.validateJwtToken(token)) {
                 String username = jwtUtils.getUsernameFromJwtToken(token);
-                UserDetails userDetails = new DukAppDetailsManager(userService).loadUserByUsername(username);
+                UserDetails userDetails = dukAppDetailsManager.loadUserByUsername(username);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

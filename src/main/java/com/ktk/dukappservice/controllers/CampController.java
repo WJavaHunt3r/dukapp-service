@@ -2,44 +2,31 @@ package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.camps.Camp;
 import com.ktk.dukappservice.data.camps.CampService;
-import com.ktk.dukappservice.data.seasons.Season;
-import com.ktk.dukappservice.data.seasons.SeasonService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/camp")
 public class CampController {
 
-    private CampService campService;
-    private UserService userService;
-    private SeasonService seasonService;
+    private final CampService campService;
+    private final UserService userService;
 
-    public CampController(CampService campService, UserService userService, SeasonService seasonService) {
+    public CampController(CampService campService, UserService userService) {
         this.campService = campService;
         this.userService = userService;
-        this.seasonService = seasonService;
     }
 
     @GetMapping()
-    public ResponseEntity getCamps(@Nullable @RequestParam("seasonId") Long seasonId) {
-        if (seasonId == null) {
-            return ResponseEntity.status(200).body(campService.findAll());
-        }
-        Optional<Season> season = seasonService.findById(seasonId);
-        if (season.isEmpty()) {
-            return ResponseEntity.status(404).body("No season with given id: " + seasonId);
-        }
-        List<Camp> goals = campService.findAllBySeason(season.get());
-        return ResponseEntity.status(200).body(goals);
+    public ResponseEntity getCamps(@RequestParam("seasonYear") Integer seasonYear, Pageable pageable) {
+        return ResponseEntity.status(200).body(campService.fetchByQuery(seasonYear, pageable));
     }
 
     @GetMapping("/{id}")

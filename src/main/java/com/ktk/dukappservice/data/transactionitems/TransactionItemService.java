@@ -5,11 +5,12 @@ import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.enums.Account;
 import com.ktk.dukappservice.enums.TransactionType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,8 +26,8 @@ public class TransactionItemService {
         return transactionItemRepository.findById(id);
     }
 
-    public List<TransactionItem> fetchByQuery(TransactionType transactionType, LocalDate startDate, LocalDate endDate, Long transactionId, Long roundId, Long userId, Integer seasonYear) {
-        return transactionItemRepository.fetchByQuery(transactionType, startDate, endDate, transactionId, roundId, userId, seasonYear);
+    public Page<TransactionItem> fetchByQuery(TransactionType transactionType, LocalDate startDate, LocalDate endDate, Long transactionId, Long roundId, Long userId, Integer seasonYear, Pageable pageable) {
+        return transactionItemRepository.fetchByQuery(transactionType, startDate, endDate, transactionId, roundId, userId, seasonYear, pageable);
     }
 
     public Double sumPointsByUserAndRound(User user, Round s) {
@@ -50,7 +51,7 @@ public class TransactionItemService {
     }
 
     public void deleteByTransactionId(Long transactionId) {
-        fetchByQuery(null, null, null, transactionId, null, null, null).forEach(t -> transactionItemRepository.deleteById(t.getId()));
+        fetchByQuery(null, null, null, transactionId, null, null, null, null).forEach(t -> transactionItemRepository.deleteById(t.getId()));
     }
 
     public void deleteById(Long transactionItemId) {
@@ -88,7 +89,7 @@ public class TransactionItemService {
 
             } else if (t.getAccount().equals(Account.OTHER)) {
                 if (t.getTransactionType().equals(TransactionType.POINT)) {
-                    if(t.getHours() != 0) {
+                    if (t.getHours() != 0) {
                         t.setPoints(t.getHours() * 6.0);
                     }
                 }

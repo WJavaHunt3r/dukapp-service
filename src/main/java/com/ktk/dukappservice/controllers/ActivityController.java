@@ -10,11 +10,13 @@ import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.ActivityMapper;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.microsoft.graph.models.odataerrors.ODataError;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -37,14 +39,14 @@ public class ActivityController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getActivities(@Nullable @RequestParam("responsibleId") Long responsibleId,
-                                           @Nullable @RequestParam("employerId") Long employerId,
-                                           @Nullable @RequestParam("registeredInApp") Boolean registeredInApp,
-                                           @Nullable @RequestParam("registeredInMyShare") Boolean registeredInMyShare,
-                                           @Nullable @RequestParam("createUserId") Long createUserId,
-                                           @Nullable @RequestParam("referenceDate") String referenceMonth,
-                                           @Nullable @RequestParam("searchText") String searchText) {
-        return ResponseEntity.status(200).body(activityService.fetchByQuery(responsibleId, employerId, registeredInApp, registeredInMyShare, createUserId, referenceMonth, searchText).stream().map((activity -> activityMapper.entityToDto(activity))));
+    public ResponseEntity<?> getActivities(@RequestParam(value = "responsibleId", required = false) Long responsibleId,
+                                           @RequestParam(value = "employerId", required = false) Long employerId,
+                                           @RequestParam(value = "registeredInApp", required = false) Boolean registeredInApp,
+                                           @RequestParam(value = "registeredInMyShare", required = false) Boolean registeredInMyShare,
+                                           @RequestParam(value = "createUserId", required = false) Long createUserId,
+                                           @RequestParam(value = "referenceDate", required = false) String referenceMonth,
+                                           @RequestParam(value = "searchText", required = false) String searchText, Pageable pageable) {
+        return ResponseEntity.status(200).body(activityService.fetchByQuery(responsibleId, employerId, registeredInApp, registeredInMyShare, createUserId, referenceMonth, searchText, pageable).map((activityMapper::entityToDto)));
     }
 
     @GetMapping("/{id}")
@@ -53,22 +55,22 @@ public class ActivityController {
         if (activity.isEmpty()) {
             return ResponseEntity.status(404).body("No activity with id: " + id);
         }
-        return ResponseEntity.status(200).body(activity.get());
+        return ResponseEntity.status(200).body(activityMapper.entityToDto(activity.get()));
     }
 
     @PostMapping()
-    public ResponseEntity<?> postActivity(@Valid @RequestBody ActivityDto activity) {
-        Optional<User> createUser = userService.findById(activity.getCreateUser().getId());
+    public ResponseEntity<?> postActivity(@Valid @RequestBody ActivityDto activity, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> createUser = userService.findByUsername(userDetails.getUsername());
         if (createUser.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + activity.getCreateUser().getId());
+            return ResponseEntity.status(400).body("No user with id:" + activity.getCreateUserId());
         }
-        Optional<User> employer = userService.findById(activity.getEmployer().getId());
+        Optional<User> employer = userService.findById(activity.getEmployerId());
         if (employer.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + activity.getEmployer().getId());
+            return ResponseEntity.status(400).body("No user with id:" + activity.getEmployerId());
         }
-        Optional<User> responsibleUser = userService.findById(activity.getResponsible().getId());
+        Optional<User> responsibleUser = userService.findById(activity.getResponsibleId());
         if (responsibleUser.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + activity.getResponsible().getId());
+            return ResponseEntity.status(400).body("No user with id:" + activity.getResponsibleId());
         }
         Activity entity = new Activity();
         entity.setCreateUser(createUser.get());

@@ -8,8 +8,6 @@ import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-
 @Service
 public class TransactionServiceUtils {
 
@@ -26,7 +24,7 @@ public class TransactionServiceUtils {
     }
 
     public void updateUserStatus(Round round, User user) {
-        goalService.findByUserAndSeasonYear(user, LocalDate.now().getYear()).ifPresent(g -> userStatusService.calculateUserStatus(user, g.getGoal()));
+        userStatusService.calculateUserStatus(user, round.getSeason());
         paceUserRoundService.calculateUserRoundStatus(round, user);
     }
 

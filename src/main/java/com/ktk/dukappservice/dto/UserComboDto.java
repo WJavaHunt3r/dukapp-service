@@ -7,14 +7,16 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class GoalDto {
+public class UserComboDto {
     private Long id;
 
-    private Long userId;
+    private String firstname;
 
-    private String username;
+    private String lastname;
 
-    private Integer seasonYear;
+    private Integer age;
 
-    private Integer goal;
+    private String comboText;
+
+    private String churchName;
 }

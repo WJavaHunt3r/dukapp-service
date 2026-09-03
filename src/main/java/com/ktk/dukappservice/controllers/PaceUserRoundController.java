@@ -37,7 +37,13 @@ public class PaceUserRoundController {
 
     @PostMapping("/recalculate")
     public ResponseEntity<?> recalculateTeamRoundsScore() {
-        paceUserRoundService.createAllPaceUserRounds(roundService.getLastRound());
+        paceUserRoundService.createAllPaceUserRounds(roundService.getCurrentRound());
         return ResponseEntity.status(200).body("Recalculation successful");
+    }
+
+    @GetMapping("/head")
+    public ResponseEntity<?> getHeadData() {
+        int onTrack = paceUserRoundService.getOnTrackCountByRound(roundService.getCurrentRound());
+        return ResponseEntity.status(200).body(onTrack);
     }
 }

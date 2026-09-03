@@ -9,15 +9,16 @@ import com.ktk.dukappservice.data.transactions.TransactionService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.service.BaseService;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Optional;
+
+import static com.ktk.dukappservice.data.ServiceUtils.getDateFrom;
+import static com.ktk.dukappservice.data.ServiceUtils.getDateTo;
 
 @Service
 public class ActivityService extends BaseService<Activity, Long> {
@@ -36,29 +37,12 @@ public class ActivityService extends BaseService<Activity, Long> {
         this.transactionServiceUtils = transactionServiceUtils;
     }
 
-    public List<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String searchText) {
-        return fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, null, searchText);
+    public Page<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String searchText, Pageable pageable) {
+        return fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, null, searchText, pageable);
     }
 
-    public List<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String referenceDate, String searchText) {
-        return repository.fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, getDateFrom(referenceDate), getDateTo(referenceDate), searchText);
-    }
-
-    private LocalDateTime getDateTo(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
-            return LocalDateTime.now();
-        }
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-        return LocalDateTime.of(date.getYear(), date.getMonth(), YearMonth.of(date.getYear(), date.getMonth()).atEndOfMonth().getDayOfMonth(), 0, 0).plusDays(1);
-    }
-
-    private LocalDateTime getDateFrom(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
-            return LocalDateTime.of(2024, 1, 1, 0, 0);
-        }
-
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-        return LocalDateTime.of(date.getYear(), date.getMonth(), 1, 0, 0);
+    public Page<Activity> fetchByQuery(Long responsible, Long employer, Boolean registeredInApp, Boolean registeredInMyShare, Long createUser, String referenceDate, String searchText, Pageable pageable) {
+        return repository.fetchByQuery(responsible, employer, registeredInApp, registeredInMyShare, createUser, getDateFrom(referenceDate), getDateTo(referenceDate), searchText, pageable);
     }
 
     public Optional<Activity> findById(Long id) {
@@ -92,7 +76,7 @@ public class ActivityService extends BaseService<Activity, Long> {
             for (var item : activityItemService.findByActivity(activity.getId())) {
                 createTransactionItem(transaction, createUser, item);
             }
-            transactionServiceUtils.calculateAllTeamStatus();
+//            transactionServiceUtils.calculateAllTeamStatus();
             activity.setRegisteredInApp(true);
         } catch (Exception ignored){
 

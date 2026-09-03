@@ -46,7 +46,7 @@ public class PaceTeamRoundService extends BaseService<PaceTeamRound, Long> {
 
     public void calculateAllTeamRoundPoints() {
 //        calculateAllTeamRoundPoints(roundService.getLastRound());
-        for (PaceUserRound pur : paceUserRoundService.findByQuery(null, roundService.getLastRound().getId(), null, null)) {
+        for (PaceUserRound pur : paceUserRoundService.findByQuery(null, roundService.getCurrentRound().getId(), null, null)) {
             paceUserRoundService.calculateUserRoundStatus(pur.getRound(), pur.getUser());
 
         }

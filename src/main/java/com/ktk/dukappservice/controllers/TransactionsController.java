@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.controllers;
 
-import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.data.transactionitems.TransactionItem;
 import com.ktk.dukappservice.data.transactionitems.TransactionItemService;
@@ -11,14 +10,13 @@ import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.TransactionDto;
 import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/api/transaction")
@@ -28,7 +26,6 @@ public class TransactionsController {
     private final ModelMapper modelMapper;
     private final TransactionItemService transactionItemService;
     private final UserService userService;
-    private final RoundService roundService;
     private final TransactionServiceUtils transactionServiceUtils;
 
     public TransactionsController(TransactionService transactionService, ModelMapper modelMapper, TransactionItemService transactionItemService, UserService userService, RoundService roundService, TransactionServiceUtils transactionServiceUtils) {
@@ -36,7 +33,6 @@ public class TransactionsController {
         this.modelMapper = modelMapper;
         this.transactionItemService = transactionItemService;
         this.userService = userService;
-        this.roundService = roundService;
         this.transactionServiceUtils = transactionServiceUtils;
     }
 
@@ -62,7 +58,7 @@ public class TransactionsController {
             return ResponseEntity.status(403).body("Permission denied!");
         }
         if (transactionService.existsById(id)) {
-            Iterable<TransactionItem> items = transactionItemService.fetchByQuery(null, null, null, id, null, null, null);
+            Iterable<TransactionItem> items = transactionItemService.fetchByQuery(null, null, null, id, null, null, null, null);
             transactionService.deleteById(id);
             transactionItemService.deleteByTransactionId(id);
             for (var item : items) {
@@ -76,22 +72,12 @@ public class TransactionsController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getTransactions(@Nullable @RequestParam("createUserId") Long createUserId, @Nullable @RequestParam("roundId") Long roundId) {
-        if (createUserId != null) {
-            Optional<User> createUser = findById(createUserId);
-            if (createUser.isPresent()) {
-                return ResponseEntity.status(200).body(StreamSupport.stream(transactionService.findAllByCreateUser(createUser.get()).spliterator(), false).map(this::convertToDto));
-            }
-
-        }
-        if (roundId != null) {
-            Optional<Round> round = roundService.findById(roundId);
-            if (round.isEmpty()) {
-                return ResponseEntity.status(400).body("No Round with given ID: " + roundId);
-            }
-            return ResponseEntity.status(200).body(transactionService.findAllByRound(round.get()).stream().map(this::convertToDto));
-        }
-        return ResponseEntity.status(200).body(StreamSupport.stream(transactionService.findAll().spliterator(), false).map(this::convertToDto));
+    public ResponseEntity<?> getTransactions(@RequestParam(value = "createUserId", required = false) Long createUserId,
+                                             @RequestParam(value = "dateFrom") String dateFrom,
+                                             @RequestParam(value = "dateTo") String dateTo,
+                                             @RequestParam(value = "keyword", required = false) String keyword,
+                                             Pageable pageable) {
+        return ResponseEntity.status(200).body(transactionService.fetchByQuery(dateFrom, dateTo, createUserId, pageable).map(this::convertToDto));
     }
 
     @GetMapping("/{id}")
