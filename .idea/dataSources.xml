@@ -1,23 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="workhudb" uuid="f2f61805-8c7a-4da7-82d5-b47987b60e5f">
-      <driver-ref>h2.unified</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.h2.Driver</jdbc-driver>
-      <jdbc-url>jdbc:h2:file:C:\workspace\private\work-hu-service\workhudb</jdbc-url>
-    </data-source>
     <data-source source="LOCAL" name="default@localhost" uuid="f6b8ed79-4b0f-49dc-bf56-37aae43b1ef4">
       <driver-ref>h2.unified</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.h2.Driver</jdbc-driver>
       <jdbc-url>jdbc:h2:tcp://localhost:9092/default</jdbc-url>
     </data-source>
-    <data-source source="LOCAL" name="workhu@remote" uuid="de5423e8-2284-470c-9781-64b7e4495e9d">
+    <data-source source="LOCAL" name="dukapp" uuid="272250b6-42ff-4faf-9b53-69b3983c6bbd">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://78.139.43.2:5432/workhudb</jdbc-url>
+      <jdbc-url>jdbc:postgresql://10.10.2.31:5432/dukappdb</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="gm" uuid="0e96dd08-2877-4b28-abde-782e74b21af0">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://10.10.2.37:3306/gm</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="workhudb" uuid="3d10f112-f49e-48d3-8941-35ac9c53aba7">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/workhudb</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="h2@dukapp" uuid="6586ec1f-9e6b-4151-b6e3-104c617d2bc6">
+      <driver-ref>h2.unified</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.h2.Driver</jdbc-driver>
+      <jdbc-url>jdbc:h2:$PROJECT_DIR$/dukappdb</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="local@dukapp" uuid="9adb5f79-06eb-4bb9-b5d7-3b67f47f7355">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/dukappdb</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
 </project>

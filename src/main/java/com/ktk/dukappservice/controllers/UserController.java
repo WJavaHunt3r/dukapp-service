@@ -1,6 +1,5 @@
 package com.ktk.dukappservice.controllers;
 
-import com.ktk.dukappservice.data.paceteam.PaceTeam;
 import com.ktk.dukappservice.data.paceteam.PaceTeamService;
 import com.ktk.dukappservice.data.paceteamround.PaceTeamRoundService;
 import com.ktk.dukappservice.data.seasons.SeasonService;
@@ -11,15 +10,13 @@ import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.UserMapper;
 import com.ktk.dukappservice.service.UserFamilyImportService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/api/user")
@@ -93,18 +90,12 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getUsers(@Nullable @RequestParam("teamId") Long teamId, @Nullable @RequestParam("listO36") Boolean listO36) {
-        if (teamId != null) {
-            Optional<PaceTeam> team = paceTeamService.findById(teamId);
-            if (team.isEmpty()) {
-                return ResponseEntity.status(400).body("No team found with id: " + teamId);
-            }
-            return ResponseEntity.status(200).body(StreamSupport.stream(userService.findAllByPaceTeam(team.get(), seasonService.findBySeasonYear(2024).get()).spliterator(), false).map((Function<User, Object>) userMapper::entityToDto));
-        }
-        if (listO36 == null || !listO36) {
-            return ResponseEntity.status(200).body(StreamSupport.stream(userService.getYouth().spliterator(), false).map((Function<User, Object>) userMapper::entityToDto));
-        }
-        return ResponseEntity.status(200).body(StreamSupport.stream(userService.findAll().spliterator(), false).map(userMapper::entityToDto));
+    public ResponseEntity<?> getUsers(@RequestParam(value = "teamId", required = false) Long teamId,
+                                      @RequestParam(value = "familyId", required = false) Long familyId,
+                                      @RequestParam(value = "churchId", required = false) Long churchId,
+                                      @RequestParam(value = "spouseId", required = false) Long spouseId,
+                                      @RequestParam(value = "keyword", required = false) String keyword, Pageable pageable) {
+        return ResponseEntity.status(200).body(userService.fetchByQuery(familyId, spouseId, teamId, churchId, keyword, pageable).map(userMapper::entityToDto));
     }
 
     @PutMapping("/{id}")

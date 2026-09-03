@@ -58,9 +58,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
-        // Note: loginDto.getUsername() here can be either email or username
-        // Spring Security will call your loadUserByUsername, which we updated earlier
-        // to check both fields in the database.
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword())
         );
