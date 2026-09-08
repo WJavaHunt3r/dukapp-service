@@ -118,6 +118,9 @@ public class User extends BaseEntity<User, Long> {
     }
 
     public int getAge() {
+        if(birthDate == null){
+            return 0;
+        }
         return getAgeAtDate(LocalDate.now());
     }
 
