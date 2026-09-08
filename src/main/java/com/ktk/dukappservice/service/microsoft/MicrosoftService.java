@@ -51,7 +51,12 @@ public class MicrosoftService {
         String xlsx = MicrosoftUtils.createXlsxFromActivity(activity, items, sumHours, new ClassPathResource("imports/docs/munkalap_sablon_uj.xlsx").getInputStream());
 
         if (activity.getTransactionType().equals(TransactionType.HOURS)) {
-            createPaidListItem(activity, additionalData, graphClient, sumHours);
+            try {
+                createPaidListItem(activity, additionalData, graphClient, sumHours);
+            }catch (Exception e) {
+
+            }
+
             fields.setAdditionalData(additionalData);
             listItem.setFields(fields);
             sendXlsxToSharepointFolder(graphClient, activity, xlsx);
@@ -203,11 +208,14 @@ public class MicrosoftService {
     }
 
     private String getUserTeamsListId(GraphServiceClient graphClient, Long id) {
-        var result = graphClient.sites().bySiteId(config.getSiteId()).lists().byListId(config.getWorkUsersId()).items().get(requestOptions -> {
-            requestOptions.queryParameters.expand = new String[]{"fields"};
-            requestOptions.queryParameters.filter = "fields/Title eq " + id;
-            requestOptions.headers.add("Prefer", "HonorNonIndexedQueriesWarningMayFailRandomly");
-        });
+        var result = graphClient.sites().bySiteId(config.getSiteId())
+                .lists().byListId(config.getWorkUsersId())
+                .items()
+                .get(requestConfiguration -> {
+                    requestConfiguration.queryParameters.expand = new String[]{"fields"};
+                    requestConfiguration.queryParameters.filter = "fields/Title eq '" + id + "'";
+                    requestConfiguration.headers.add("Prefer", "HonorNonIndexedQueriesWarningMayFailRandomly");
+                });
 
         return result.getValue().get(0).getFields().getId();
     }

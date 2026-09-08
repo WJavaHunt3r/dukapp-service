@@ -30,4 +30,6 @@ public class UserStatusDto {
 
     private Integer toOnTrack;
 
+    private Integer toLocalOnTrack;
+
 }

@@ -4,6 +4,7 @@ import com.ktk.dukappservice.data.paceuserround.PaceUserRound;
 import com.ktk.dukappservice.data.paceuserround.PaceUserRoundService;
 import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.dto.PaceUserRoundDto;
+import com.ktk.dukappservice.dto.PaceUserRoundHeadDto;
 import com.ktk.dukappservice.mapper.PaceUserRoundMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -43,7 +44,17 @@ public class PaceUserRoundController {
 
     @GetMapping("/head")
     public ResponseEntity<?> getHeadData() {
-        int onTrack = paceUserRoundService.getOnTrackCountByRound(roundService.getCurrentRound());
-        return ResponseEntity.status(200).body(onTrack);
+        var head = new PaceUserRoundHeadDto();
+        var round = roundService.getCurrentRound();
+        int onTrack = paceUserRoundService.getOnTrackCountByRound(round);
+        int goalCount = paceUserRoundService.countByRound(round);
+        double myShareCommonGoal = round.getChurchGoal() * 2 - round.getSamvirkChurchStatus();
+        double toOnTrack = Math.ceil(goalCount * (myShareCommonGoal / 100)) - onTrack;
+
+        head.setGoalCount(goalCount);
+        head.setOnTrackCount(onTrack);
+        head.setChurchGoal(round.getChurchGoal());
+        head.setToOnTrackCount((int) toOnTrack);
+        return ResponseEntity.status(200).body(head);
     }
 }

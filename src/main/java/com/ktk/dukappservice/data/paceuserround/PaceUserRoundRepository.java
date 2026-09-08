@@ -46,4 +46,6 @@ public interface PaceUserRoundRepository extends JpaRepository<PaceUserRound, Lo
 
     @Query("SELECT count(ur) FROM PaceUserRound ur WHERE ur.round = ?2 and ur.user.paceTeam = ?1 AND ur.onTrack = true ")
     Integer countOnTrackByTeamAndRound(PaceTeam team, Round round);
+
+    Integer countAllByRound(Round r);
 }

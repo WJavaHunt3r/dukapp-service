@@ -26,4 +26,6 @@ public class PaceUserRoundDto {
     private Integer roundMyShareGoal;
 
     private boolean onTrack;
+
+    private boolean localOnTrack;
 }

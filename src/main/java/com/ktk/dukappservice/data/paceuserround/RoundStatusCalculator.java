@@ -8,6 +8,7 @@ public record RoundStatusCalculator(
     double userGoal,
     int userTransactions,
     double roundLocalGoalPercentage,
+    double roundGoalPercentage,
     double currentStatusDecimal,
     int existingCredits
 ) {
@@ -20,6 +21,10 @@ public record RoundStatusCalculator(
 
     // 2. Determine if User is On Track
     public boolean isOnTrack() {
+        return (currentStatusDecimal * 100) >= roundGoalPercentage;
+    }
+
+    public boolean isLocalOnTrack() {
         return (currentStatusDecimal * 100) >= roundLocalGoalPercentage;
     }
 
