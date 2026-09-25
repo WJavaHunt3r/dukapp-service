@@ -49,6 +49,10 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         return repository.countByRoundAndTeam(r, t);
     }
 
+    public Integer countByRound(Round r){
+        return repository.countAllByRound(r);
+    }
+
     public Integer calculatePaceTeamRoundCoins(PaceTeam t, Round round) {
         return repository.calculatePaceTeamRoundCoins(t, round);
     }
@@ -133,12 +137,14 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
                 status.getGoal(),
                 status.getTransactions(),
                 pur.getRound().getLocalMyShareGoal(),
+                pur.getRound().getMyShareGoal(),
                 status.getStatus(),
                 credits == null ? 0 : credits
         );
 
         pur.setRoundMyShareGoal(calculator.calculateMyShareGoal());
         pur.setOnTrack(calculator.isOnTrack());
+        pur.setLocalOnTrack(calculator.isLocalOnTrack());
         pur.setRoundCredits(calculator.resolveCredits());
         pur.setRoundCoins(0.0); // Reset or apply logic as needed
 

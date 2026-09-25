@@ -26,8 +26,11 @@ public class UserStatusMapper {
         dto.setName(entity.getUser().getFullName());
         dto.setSeasonYear(entity.getSeason().getSeasonYear());
         double roundGoal = round.getMyShareGoal() / 100 * entity.getGoal();
+        double localRoundGoal = round.getLocalMyShareGoal() / 100 * entity.getGoal();
         int toOnTrack = (int) roundGoal - entity.getTransactions();
+        int toLocalOnTrack = (int) localRoundGoal - entity.getTransactions();
         dto.setToOnTrack(Math.max(toOnTrack, 0));
+        dto.setToLocalOnTrack(Math.max(toLocalOnTrack, 0));
         return dto;
     }
 

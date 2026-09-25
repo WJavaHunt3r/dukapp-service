@@ -35,6 +35,12 @@ public class Round extends BaseEntity<Round, Long> {
     @Column(name = "LOCAL_MYSHARE_GOAL")
     private Double localMyShareGoal;
 
+    @Column(name = "CHURCH_GOAL", columnDefinition = "integer default 0")
+    private Integer churchGoal;
+
+    @Column(name = "SAMVIRK_CHURCH_STATUS")
+    private Double samvirkChurchStatus;
+
     @Column(name = "SAMVIRK_GOAL")
     @NotNull
     private Integer samvirkGoal;

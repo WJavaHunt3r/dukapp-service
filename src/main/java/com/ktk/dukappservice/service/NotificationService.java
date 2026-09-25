@@ -54,7 +54,7 @@ public class NotificationService {
     private void processEmailForUser(UserStatus u, Round currentRound) {
         paceUserRoundRepository.findByUserAndRound(u.getUser(), currentRound)
                 .ifPresent(ur -> {
-                    if (!ur.isOnTrack() && u.getUser().getEmail() != null && !u.getUser().getEmail().isEmpty()) {
+                    if (!ur.isLocalOnTrack() && u.getUser().getEmail() != null && !u.getUser().getEmail().isEmpty()) {
                         try {
                             microsoftService.sendStatusUpdate(
                                     u.getTransactions(),

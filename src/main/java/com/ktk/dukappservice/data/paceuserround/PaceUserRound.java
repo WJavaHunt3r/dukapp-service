@@ -49,6 +49,9 @@ public class PaceUserRound extends BaseEntity<PaceUserRound, Long> {
     @Column(name = "ON_TRACK", columnDefinition = "boolean default false")
     private boolean onTrack;
 
+    @Column(name = "LOCAL_ON_TRACK", columnDefinition = "boolean default false")
+    private boolean localOnTrack;
+
     @Column(name = "MYSHARE_ON_TRACK_POINTS", columnDefinition = "boolean default false")
     private boolean myShareOnTrackPoints;
 

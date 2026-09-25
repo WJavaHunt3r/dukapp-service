@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.WeekFields;
 import java.util.Optional;
 
 @Service
@@ -59,7 +58,7 @@ public class RoundService extends BaseService<Round, Long> {
             LocalDate date = LocalDate.now();
             Optional<Round> previousRound = findRoundByDate(LocalDateTime.now().minusDays(3));
             Round r = new Round();
-            int weekNumber = date.get(WeekFields.ISO.weekOfWeekBasedYear());
+            int monthNumber = date.getMonthValue();
             r.setStartDateTime(LocalDateTime.of(date.getYear(), date.getMonth(), date.getDayOfMonth(), 0, 0));
             LocalDateTime sat = r.getStartDateTime().plusDays(6);
             r.setEndDateTime(LocalDateTime.of(date.getYear(), date.getMonth(), date.getMonth().maxLength(), 23, 59));
@@ -70,8 +69,10 @@ public class RoundService extends BaseService<Round, Long> {
             r.setSamvirkOnTrackPoints(0);
             r.setSamvirkMaxPoints(0);
 
-            r.setMyShareGoal((double) (weekNumber * 11));
-            r.setLocalMyShareGoal((double) (weekNumber * 11));
+            r.setChurchGoal(80);
+            r.setSamvirkChurchStatus(72.2);
+            r.setMyShareGoal((double) (monthNumber * 11));
+            r.setLocalMyShareGoal((double) (monthNumber * 11));
             r.setRoundNumber(LocalDate.now().getMonthValue());
             r.setSeason(season);
             r.setUserRoundsCreated(false);
