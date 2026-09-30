@@ -15,4 +15,6 @@ public class PaceUserRoundHeadDto {
     private Integer churchGoal;
 
     private Integer toOnTrackCount;
+
+    private Double localMyShareGoal;
 }
