@@ -6,6 +6,7 @@ import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.data.transactionitems.TransactionItemService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
+import com.ktk.dukappservice.data.userstatus.StatusTotals;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
 import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.service.BaseService;
@@ -119,10 +120,11 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
 
     private int calculateCurrRoundMyShareGoal(Round round, User u) {
         return userStatusService.findByUserIdAndSeason(u.getId(), round.getSeason().getSeasonYear())
-                .map(userStatus -> {
+                .map(userStatusService::getStatusTotals)
+                .map(totals -> {
                     double goalPercentage = round.getLocalMyShareGoal() / 100.0;
-                    int targetAmount = (int) Math.round(userStatus.getGoal() * goalPercentage);
-                    return Math.max(0, targetAmount - userStatus.getTransactions());
+                    int targetAmount = (int) Math.round(totals.goal() * goalPercentage);
+                    return Math.max(0, targetAmount - totals.transactions());
                 }).orElse(0);
     }
 
@@ -131,11 +133,12 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
         UserStatus status = userStatusService.findByUserIdAndSeason(pur.getUser().getId(), pur.getRound().getSeason().getSeasonYear())
                 .orElseThrow(() -> new RuntimeException("Status not found"));
 
+        StatusTotals totals = userStatusService.getStatusTotals(status);
         Integer credits = transactionItemService.sumCreditsByUserAndRound(pur.getUser(), pur.getRound());
 
         RoundStatusCalculator calculator = new RoundStatusCalculator(
-                status.getGoal(),
-                status.getTransactions(),
+                totals.goal(),
+                totals.transactions(),
                 pur.getRound().getLocalMyShareGoal(),
                 pur.getRound().getMyShareGoal(),
                 status.getStatus(),

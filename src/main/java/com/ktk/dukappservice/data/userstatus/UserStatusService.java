@@ -94,10 +94,41 @@ public class UserStatusService extends BaseService<UserStatus, Long> {
         Optional<Goal> userGoal = goalService.findByUserAndSeasonYear(us.getUser(), us.getSeason().getSeasonYear());
         if (userGoal.isEmpty()) return;
         us.setGoal(userGoal.get().getGoal());
-        us.setStatus((double) transactions / us.getGoal());
         us.setTransactions(transactions);
         us.setTransition(Math.max(us.getTransactions() - us.getGoal(), 0));
+
+        // Spouses count as one: both get the status of their combined goal and transactions
+        Optional<UserStatus> spouseStatus = findSpouseStatus(us);
+        StatusTotals totals = getStatusTotals(us, spouseStatus);
+        us.setStatus(totals.status());
         save(us);
+        spouseStatus.ifPresent(spouse -> {
+            spouse.setStatus(totals.status());
+            save(spouse);
+        });
+    }
+
+    public Optional<UserStatus> findSpouseStatus(UserStatus us) {
+        Long spouseId = us.getUser().getSpouseId();
+        if (spouseId == null) {
+            return Optional.empty();
+        }
+        return findByUserIdAndSeason(spouseId, us.getSeason().getSeasonYear())
+                .filter(spouse -> spouse.getGoal() != null);
+    }
+
+    public StatusTotals getStatusTotals(UserStatus us) {
+        return getStatusTotals(us, findSpouseStatus(us));
+    }
+
+    private StatusTotals getStatusTotals(UserStatus us, Optional<UserStatus> spouseStatus) {
+        int goal = us.getGoal();
+        int transactions = us.getTransactions();
+        if (spouseStatus.isPresent()) {
+            goal += spouseStatus.get().getGoal();
+            transactions += spouseStatus.get().getTransactions();
+        }
+        return new StatusTotals(goal, transactions);
     }
 
     @Override
