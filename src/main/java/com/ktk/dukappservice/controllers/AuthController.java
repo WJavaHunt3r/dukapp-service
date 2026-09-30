@@ -11,6 +11,7 @@ import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.security.*;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.microsoft.graph.models.odataerrors.ODataError;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,12 +41,14 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final DukAppDetailsManager detailsManager;
     private final RefreshTokenService refreshTokenService;
+    private final GoogleIdTokenVerifier googleIdTokenVerifier;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserService userService,
                           MicrosoftService microsoftService,
                           JwtUtils jwtUtils,
-                          BookingJwtUtils bookingJwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager, RefreshTokenService refreshTokenService) {
+                          BookingJwtUtils bookingJwtUtils, PasswordEncoder passwordEncoder, DukAppDetailsManager detailsManager, RefreshTokenService refreshTokenService,
+                          @Value("${google.app.clientIds}") List<String> googleClientIds) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.microsoftService = microsoftService;
@@ -54,6 +57,9 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.detailsManager = detailsManager;
         this.refreshTokenService = refreshTokenService;
+        this.googleIdTokenVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                .setAudience(googleClientIds)
+                .build();
     }
 
     @PostMapping("/login")
@@ -185,14 +191,9 @@ public class AuthController {
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> payload) {
         String idTokenString = payload.get("idToken");
 
-        // 1. Setup Verifier
-        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                .setAudience(Collections.singletonList("470140408680-vvsu3rjroghr7suq603r4eek5lec5bds.apps.googleusercontent.com"))
-                .build();
-
         try {
-            // 2. Verify the token
-            GoogleIdToken idToken = verifier.verify(idTokenString);
+            // 1. Verify the token
+            GoogleIdToken idToken = googleIdTokenVerifier.verify(idTokenString);
             if (idToken != null) {
                 GoogleIdToken.Payload googlePayload = idToken.getPayload();
 
@@ -201,7 +202,7 @@ public class AuthController {
                 String firstName = (String) googlePayload.get("given_name");
                 String lastName = (String) googlePayload.get("family_name");
 
-                // 3. Find or Create the user in your database
+                // 2. Find or Create the user in your database
                 User user = userService.findByEmail(email).orElseGet(() -> {
                     User newUser = new User();
                     newUser.setEmail(email);
@@ -221,7 +222,7 @@ public class AuthController {
                     return userService.save(newUser);
                 });
 
-                // 4. Generate YOUR app's JWT
+                // 3. Generate YOUR app's JWT
                 String jwt = jwtUtils.generateToken(user.getUsername());
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
                 return ResponseEntity.ok(new JwtResponse(jwt, refreshToken.getToken(), user.getUsername(), List.of(user.getRole().name())));
