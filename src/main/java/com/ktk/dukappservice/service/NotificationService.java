@@ -3,6 +3,7 @@ package com.ktk.dukappservice.service;
 import com.ktk.dukappservice.data.paceuserround.PaceUserRoundRepository;
 import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
+import com.ktk.dukappservice.data.userstatus.StatusTotals;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
 import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
@@ -55,10 +56,11 @@ public class NotificationService {
         paceUserRoundRepository.findByUserAndRound(u.getUser(), currentRound)
                 .ifPresent(ur -> {
                     if (!ur.isLocalOnTrack() && u.getUser().getEmail() != null && !u.getUser().getEmail().isEmpty()) {
+                        StatusTotals totals = userStatusService.getStatusTotals(u);
                         try {
                             microsoftService.sendStatusUpdate(
-                                    u.getTransactions(),
-                                    u.getStatus() * 100,
+                                    totals.transactions(),
+                                    totals.status() * 100,
                                     ur.getRoundMyShareGoal(),
                                     u.getUser(),
                                     currentRound

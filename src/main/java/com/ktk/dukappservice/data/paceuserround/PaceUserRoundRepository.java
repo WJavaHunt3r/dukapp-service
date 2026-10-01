@@ -25,7 +25,7 @@ public interface PaceUserRoundRepository extends JpaRepository<PaceUserRound, Lo
     int countByRoundAndTeam(Round r, PaceTeam t);
 
 
-    int countByRoundAndOnTrack(Round r, boolean onTrack);
+    int countByRoundAndLocalOnTrack(Round r, boolean onTrack);
 
     @Query(value = "SELECT sum(ur.round_coins) FROM user_status us "
             + "RIGHT JOIN public.pace_user_rounds ur ON ur.id = us.users "

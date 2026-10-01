@@ -1,14 +1,19 @@
 package com.ktk.dukappservice.mapper;
 
 import com.ktk.dukappservice.data.rounds.Round;
+import com.ktk.dukappservice.data.userstatus.StatusTotals;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
+import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.dto.UserStatusDto;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserStatusMapper {
 
-    public UserStatusMapper() {
+    private final UserStatusService userStatusService;
+
+    public UserStatusMapper(UserStatusService userStatusService) {
+        this.userStatusService = userStatusService;
     }
 
     public UserStatusDto entityToDto(UserStatus entity, Round round) {
@@ -25,10 +30,11 @@ public class UserStatusMapper {
         dto.setLocalOnTrack(entity.getStatus() * 100 >= round.getLocalMyShareGoal());
         dto.setName(entity.getUser().getFullName());
         dto.setSeasonYear(entity.getSeason().getSeasonYear());
-        double roundGoal = round.getMyShareGoal() / 100 * entity.getGoal();
-        double localRoundGoal = round.getLocalMyShareGoal() / 100 * entity.getGoal();
-        int toOnTrack = (int) roundGoal - entity.getTransactions();
-        int toLocalOnTrack = (int) localRoundGoal - entity.getTransactions();
+        StatusTotals totals = userStatusService.getStatusTotals(entity);
+        double roundGoal = round.getMyShareGoal() / 100 * totals.goal();
+        double localRoundGoal = round.getLocalMyShareGoal() / 100 * totals.goal();
+        int toOnTrack = (int) roundGoal - totals.transactions();
+        int toLocalOnTrack = (int) localRoundGoal - totals.transactions();
         dto.setToOnTrack(Math.max(toOnTrack, 0));
         dto.setToLocalOnTrack(Math.max(toLocalOnTrack, 0));
         return dto;

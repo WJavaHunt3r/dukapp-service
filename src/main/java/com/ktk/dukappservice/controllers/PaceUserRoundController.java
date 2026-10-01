@@ -54,6 +54,7 @@ public class PaceUserRoundController {
         head.setGoalCount(goalCount);
         head.setOnTrackCount(onTrack);
         head.setChurchGoal(round.getChurchGoal());
+        head.setLocalMyShareGoal(round.getLocalMyShareGoal());
         head.setToOnTrackCount((int) toOnTrack);
         return ResponseEntity.status(200).body(head);
     }
