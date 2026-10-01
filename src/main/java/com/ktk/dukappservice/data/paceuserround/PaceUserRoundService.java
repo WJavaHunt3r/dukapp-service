@@ -156,7 +156,7 @@ public class PaceUserRoundService extends BaseService<PaceUserRound, Long> {
     }
 
     public int getOnTrackCountByRound(Round r){
-        return repository.countByRoundAndOnTrack(r, true);
+        return repository.countByRoundAndLocalOnTrack(r, true);
     }
 
     @Override
