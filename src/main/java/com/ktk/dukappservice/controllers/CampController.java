@@ -7,6 +7,7 @@ import com.ktk.dukappservice.data.users.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,18 +40,13 @@ public class CampController {
     }
 
     @PostMapping()
-    public ResponseEntity postCamp(@Valid @RequestBody Camp camp, @RequestParam Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user found with id: " + userId);
-        }
-        if (!user.get().isAdmin()) {
-            return ResponseEntity.status(404).body("Unauthorized request");
-        }
+    @PreAuthorize("hasAuthority('CAMP_MANAGE')")
+    public ResponseEntity postCamp(@Valid @RequestBody Camp camp) {
         return ResponseEntity.status(200).body(campService.save(camp));
     }
 
     @PutMapping("/{campId}")
+    @PreAuthorize("hasAuthority('CAMP_MANAGE')")
     public ResponseEntity putCamp(@Valid @RequestBody Camp camp, @PathVariable Long campId) {
         if (campService.findById(campId).isEmpty() || !camp.getId().equals(campId)) {
             return ResponseEntity.status(400).body("Invalid campId");
@@ -59,6 +55,7 @@ public class CampController {
     }
 
     @DeleteMapping("/{campId}")
+    @PreAuthorize("hasAuthority('CAMP_MANAGE')")
     public ResponseEntity deleteCamp(@PathVariable Long campId) {
         if (campService.findById(campId).isPresent()) {
             return ResponseEntity.status(400).body("Invalid campId");

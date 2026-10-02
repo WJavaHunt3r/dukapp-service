@@ -9,13 +9,15 @@ import com.ktk.dukappservice.data.transactions.TransactionService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.TransactionItemDto;
-import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.enums.TransactionType;
 import com.ktk.dukappservice.mapper.TransactionItemMapper;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +45,8 @@ public class TransactionItemsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionItemDto transactionItem) {
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionItemDto transactionItem, @AuthenticationPrincipal UserDetails userDetails) {
         Optional<Transaction> transaction = transactionService.findById(transactionItem.getTransactionId());
         if (transaction.isEmpty()) {
             return ResponseEntity.status(400).body("No transaction found with id: " + transactionItem.getTransactionId());
@@ -59,15 +62,10 @@ public class TransactionItemsController {
             return ResponseEntity.status(400).body("No round found with id: " + transactionItem.getRoundId());
         }
 
-        Optional<User> createUser = userService.findById(transactionItem.getCreateUserId());
-        if (createUser.isEmpty()) {
-            return ResponseEntity.status(400).body("CreateUser not found by id: " + transactionItem.getCreateUserId());
-        } else if (createUser.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("User is not allowed to create transactions");
-        }
+        User createUser = userService.getCurrentUser(userDetails);
 
         TransactionItem entity = new TransactionItem();
-        entity.setCreateUser(createUser.get());
+        entity.setCreateUser(createUser);
         entity.setUser(user.get());
         entity.setRound(round.get());
         transactionItemService.save(modelMapper.dtoToEntity(transactionItem, entity));
@@ -76,26 +74,21 @@ public class TransactionItemsController {
     }
 
     @PostMapping("/items")
-    public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems) {
-        transactionItems.forEach(this::addTransaction);
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems, @AuthenticationPrincipal UserDetails userDetails) {
+        transactionItems.forEach(item -> addTransaction(item, userDetails));
 //        transactionServiceUtils.calculateAllTeamStatus();
         return ResponseEntity.ok().body("Successfully added");
 
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTransaction(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (user.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied!");
-        }
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> deleteTransaction(@PathVariable Long id) {
         Optional<TransactionItem> item = transactionItemService.findById(id);
         if (item.isPresent()) {
             transactionItemService.deleteById(id);
-            transactionServiceUtils.updateUserStatus(item.get().getRound(), user.get());
+            transactionServiceUtils.updateUserStatus(item.get().getRound(), item.get().getUser());
             transactionServiceUtils.calculateAllTeamStatus(item.get().getRound());
             return ResponseEntity.status(200).body("Delete successful");
         }

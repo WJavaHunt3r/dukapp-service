@@ -2,11 +2,11 @@ package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.mentormentee.MentorMentee;
 import com.ktk.dukappservice.dto.MentorMenteeDto;
-import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.MentorMenteeMapper;
 import com.ktk.dukappservice.data.mentormentee.MentorMenteeService;
 import com.ktk.dukappservice.data.users.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,15 +40,8 @@ public class MentorMenteeController {
     }
 
     @PostMapping()
-    public ResponseEntity postMentorMentee(@Valid @RequestBody MentorMenteeDto mentorMentee, @RequestParam("userId") Long userId) {
-        var user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user with given id: " + userId);
-        }
-        if (user.get().getRole() != Role.ADMIN) {
-            return ResponseEntity.status(403).body("Permission denied!");
-        }
-
+    @PreAuthorize("hasAuthority('MENTOR_MANAGE')")
+    public ResponseEntity postMentorMentee(@Valid @RequestBody MentorMenteeDto mentorMentee) {
         var mentor = userService.findById(mentorMentee.getMentor().getId());
         if (mentor.isEmpty()) {
             return ResponseEntity.status(404).body("No user with given id: " + mentorMentee.getMentor().getId());
@@ -67,15 +60,8 @@ public class MentorMenteeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity postMentorMentee(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        var user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user with given id: " + userId);
-        }
-        if (user.get().getRole() != Role.ADMIN) {
-            return ResponseEntity.status(403).body("Permission denied!");
-        }
-
+    @PreAuthorize("hasAuthority('MENTOR_MANAGE')")
+    public ResponseEntity deleteMentorMentee(@PathVariable Long id) {
         if (!mentorMenteeService.existsById(id)) {
             return ResponseEntity.status(404).body("No Mentor Mentee with given id: " + id);
         }

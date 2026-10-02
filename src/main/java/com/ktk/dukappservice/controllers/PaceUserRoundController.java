@@ -7,6 +7,7 @@ import com.ktk.dukappservice.dto.PaceUserRoundDto;
 import com.ktk.dukappservice.dto.PaceUserRoundHeadDto;
 import com.ktk.dukappservice.mapper.PaceUserRoundMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,7 @@ public class PaceUserRoundController {
     }
 
     @PostMapping("/recalculate")
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity<?> recalculateTeamRoundsScore() {
         paceUserRoundService.createAllPaceUserRounds(roundService.getCurrentRound());
         return ResponseEntity.status(200).body("Recalculation successful");

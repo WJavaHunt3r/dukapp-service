@@ -13,7 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,13 +39,25 @@ public class UserService extends BaseService<User, Long> {
     }
 
     public Page<User> fetchByQuery(Long familyId, Long spouseId, Long teamId, Long churchId, String keyword, Pageable pageable) {
-        return userRepository.fetchByQuery(familyId, spouseId, teamId, churchId, keyword, pageable);
+        String kw = keyword == null || keyword.isBlank() ? "" : keyword.trim();
+        return userRepository.fetchByQuery(familyId, spouseId, teamId, churchId, kw, pageable);
     }
 
     public Optional<User> findByUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);
         user.ifPresent(this::calculateUserPoints);
         return user;
+    }
+
+    /**
+     * The user behind the authenticated request. Unlike {@link #findByUsername(String)} this doesn't recalculate points.
+     */
+    public User getCurrentUser(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No user with username: " + userDetails.getUsername()));
     }
 
     public Optional<User> findByEmailOrUsername(String email, String username) {

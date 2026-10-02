@@ -1,7 +1,7 @@
 package com.ktk.dukappservice.security;
 
 import com.ktk.dukappservice.data.users.User;
-import com.ktk.dukappservice.enums.Role;
+import com.ktk.dukappservice.enums.Permission;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +29,7 @@ public class BookingJwtUtils {
                 .claim("name", user.getFullName())
                 .claim("email", user.getEmail())
                 .claim("phone", user.getPhoneNumber())
-                .claim("role", user.getRole() == Role.USER ? Role.USER.name() : Role.ADMIN.name())
+                .claim("role", user.hasPermission(Permission.BOOKING_ADMIN) ? "ADMIN" : "USER")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
                 .signWith(key) // Digitális aláírás a megosztott kulccsal

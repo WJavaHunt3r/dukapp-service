@@ -10,6 +10,4 @@ import lombok.Setter;
 public class ResetPasswordDto {
 
     private Long userId;
-
-    private Long changerId;
 }

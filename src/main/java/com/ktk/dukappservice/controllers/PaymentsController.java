@@ -10,6 +10,7 @@ import com.ktk.dukappservice.enums.PaymentStatus;
 import com.ktk.dukappservice.mapper.PaymentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +47,7 @@ public class PaymentsController {
         return ResponseEntity.status(200).body(paymentMapper.entityToDto(payment.get()));
     }
 
+    // Public: called by payment callbacks without a login
     @PostMapping
     public ResponseEntity<?> postPayment(@Valid @RequestBody PaymentDto payment) {
         Payment entity = new Payment();
@@ -65,6 +67,7 @@ public class PaymentsController {
         return ResponseEntity.status(200).body(paymentMapper.entityToDto(paymentService.save(paymentMapper.dtoToEntity(payment, entity))));
     }
 
+    // Public: called by payment callbacks without a login
     @PutMapping("/{paymentId}")
     public ResponseEntity<?> putPayment(@Valid @RequestBody PaymentDto paymentDto, @PathVariable Long paymentId) {
         Optional<Payment> payment = paymentService.findById(paymentId);
@@ -75,6 +78,7 @@ public class PaymentsController {
     }
 
     @DeleteMapping("/{paymentId}")
+    @PreAuthorize("hasAuthority('PAYMENT_MANAGE')")
     public ResponseEntity<?> deletePayment(@PathVariable Long paymentId) {
         if (paymentService.findById(paymentId).isEmpty()) {
             return ResponseEntity.status(400).body("Invalid paymentId");

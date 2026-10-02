@@ -27,6 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Iterable<User> findAllByRole(Role role);
 
+    @Query("SELECT u.id FROM User u WHERE u.username = ?1 OR u.email = ?1")
+    List<Long> findIdsByUsernameOrEmail(String usernameOrEmail);
+
     @Query("SELECT u FROM User u where u.familyId = ?1 and u.id <> ?2")
     List<User> findFamily(Long familyId, Long userId);
 
@@ -39,6 +42,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM Goal g JOIN g.user u JOIN g.season s where s.seasonYear = ?1 and u IS NOT null ")
     Iterable<User> findAllBUKBySeason(Integer seasonYear);
 
+    /**
+     * {@code keyword} must be '' (not null) when unused: a null inside concat() is bound without a type and
+     * PostgreSQL then treats it as bytea ("function lower(bytea) does not exist").
+     */
     @Query(value = "SELECT u FROM User u " +
             "LEFT JOIN FETCH u.paceTeam pt " +
             "LEFT JOIN FETCH u.church c " +
@@ -46,7 +53,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "AND (:spouseId IS NULL OR u.spouseId = :spouseId) " +
             "AND (:teamId IS NULL OR pt.id = :teamId) " +
             "AND (:churchId IS NULL OR c.id = :churchId) " +
-            "AND (:kw IS NULL OR (" +
+            "AND (:kw = '' OR (" +
             "   lower(u.firstname) LIKE lower(concat('%', :kw, '%')) OR " +
             "   lower(u.lastname) LIKE lower(concat('%', :kw, '%')) OR " +
             "   lower(u.username) LIKE lower(concat('%', :kw, '%'))" +
@@ -58,7 +65,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     "AND (:spouseId IS NULL OR u.spouseId = :spouseId) " +
                     "AND (:teamId IS NULL OR pt.id = :teamId) " +
                     "AND (:churchId IS NULL OR c.id = :churchId) " +
-                    "AND (:kw IS NULL OR (" +
+                    "AND (:kw = '' OR (" +
                     "   lower(u.firstname) LIKE lower(concat('%', :kw, '%')) OR " +
                     "   lower(u.lastname) LIKE lower(concat('%', :kw, '%')) OR " +
                     "   lower(u.username) LIKE lower(concat('%', :kw, '%'))" +

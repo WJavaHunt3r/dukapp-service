@@ -8,12 +8,14 @@ import com.ktk.dukappservice.data.transactions.TransactionService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.TransactionDto;
-import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -37,26 +39,15 @@ public class TransactionsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionDto transaction, @RequestParam("userId") Long userId) {
-        Optional<User> createUser = findById(userId);
-        if (createUser.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (createUser.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied:");
-        }
-        return ResponseEntity.status(200).body(convertToDto(transactionService.save(convertToEntity(transaction, createUser.get()))));
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionDto transaction, @AuthenticationPrincipal UserDetails userDetails) {
+        User createUser = userService.getCurrentUser(userDetails);
+        return ResponseEntity.status(200).body(convertToDto(transactionService.save(convertToEntity(transaction, createUser))));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTransaction(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        Optional<User> user = findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (user.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied!");
-        }
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> deleteTransaction(@PathVariable Long id) {
         if (transactionService.existsById(id)) {
             Iterable<TransactionItem> items = transactionItemService.fetchByQuery(null, null, null, id, null, null, null, null);
             transactionService.deleteById(id);

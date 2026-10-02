@@ -10,12 +10,12 @@ import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
 import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.dto.GoalDto;
-import com.ktk.dukappservice.enums.Role;
 import com.ktk.dukappservice.mapper.GoalMapper;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +60,8 @@ public class GoalController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> saveGoal(@Valid @RequestBody GoalDto goalDto, @AuthenticationPrincipal UserDetails userDetails) {
+    @PreAuthorize("hasAuthority('GOAL_MANAGE')")
+    public ResponseEntity<?> saveGoal(@Valid @RequestBody GoalDto goalDto) {
         Optional<User> user = userService.findById(goalDto.getUserId());
         if (user.isEmpty() || !goalService.fetchByQuery(goalDto.getSeasonYear(), goalDto.getUserId(), null).isEmpty()) {
             return ResponseEntity.status(404).body("No user found with id: " + goalDto.getUserId() + ". Or User already has a goal.");
@@ -81,34 +82,22 @@ public class GoalController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editGoal(@Valid @RequestBody GoalDto goalDto, @RequestParam("userId") Long userId, @PathVariable Long id) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user found with id: " + userId);
+    @PreAuthorize("hasAuthority('GOAL_MANAGE')")
+    public ResponseEntity<?> editGoal(@Valid @RequestBody GoalDto goalDto, @PathVariable Long id) {
+        Optional<Goal> goal = goalService.findById(id);
+        if (goal.isEmpty() || !goalDto.getId().equals(id)) {
+            return ResponseEntity.status(404).body("Goal not found with id: " + id);
         }
-//        if (user.get().getRole() == Role.ADMIN) {
-            Optional<Goal> goal = goalService.findById(id);
-            if (goal.isEmpty() || !goalDto.getId().equals(id)) {
-                return ResponseEntity.status(404).body("Goal not found with id: " + id);
-            }
 
-            Goal entity = goalService.save(goalMapper.dtoToEntity(goalDto, goal.get()));
-            userRoundService.calculateUserRoundStatus(entity.getUser());
-            userStatusService.calculateUserStatus(goal.get().getUser(), goal.get().getGoal());
-            return ResponseEntity.status(200).body(goalMapper.entityToDto(entity));
-//        }
-//        return ResponseEntity.status(404).body("User not allowed to change this goal");
+        Goal entity = goalService.save(goalMapper.dtoToEntity(goalDto, goal.get()));
+        userRoundService.calculateUserRoundStatus(entity.getUser());
+        userStatusService.calculateUserStatus(goal.get().getUser(), goal.get().getGoal());
+        return ResponseEntity.status(200).body(goalMapper.entityToDto(entity));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteGoal(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (user.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied!");
-        }
+    @PreAuthorize("hasAuthority('GOAL_MANAGE')")
+    public ResponseEntity<?> deleteGoal(@PathVariable Long id) {
         if (goalService.existsById(id)) {
             Optional<Goal> g = goalService.findById(id);
             Optional<UserStatus> us = userStatusService.findByUserIdAndSeason(g.get().getUser().getId(), g.get().getSeason().getSeasonYear());

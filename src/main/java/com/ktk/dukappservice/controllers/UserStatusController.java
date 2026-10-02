@@ -6,6 +6,7 @@ import com.ktk.dukappservice.data.userstatus.UserStatusService;
 import com.ktk.dukappservice.mapper.UserStatusMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,6 +53,7 @@ public class UserStatusController {
     }
 
     @PostMapping("/setUserStatus")
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity<?> setUserStatusForYear(@RequestParam("seasonYear") Integer year) {
         service.createUserStatusForAllUsers(year);
         return ResponseEntity.status(200).body("All User Status created");
