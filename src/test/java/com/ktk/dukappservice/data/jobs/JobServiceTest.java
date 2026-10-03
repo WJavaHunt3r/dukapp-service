@@ -21,11 +21,13 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -566,5 +568,162 @@ class JobServiceTest {
             return e.getStatusCode().value();
         }
         return -1;
+    }
+
+    // ---------------------------------------------------------------- repeating jobs
+
+    private Job template(LocalDateTime start) {
+        Job t = new Job();
+        t.setCreateUser(organizer);
+        t.setResponsible(organizer);
+        t.setEmployer(job.getEmployer());
+        t.setDescription("Cleaning");
+        t.setAccount(Account.MYSHARE);
+        t.setTransactionType(TransactionType.HOURS);
+        t.setJobDateTime(start);
+        t.setJobEndDateTime(start.plusHours(2));
+        t.setRegistrationDeadline(start.minusDays(1));
+        t.setCancellationDeadline(start.minusHours(3));
+        return t;
+    }
+
+    @Test
+    void weeklyJobIsCreatedOnTheSameWeekdayAndTime() {
+        LocalDateTime start = LocalDate.now().plusDays(3).atTime(18, 30);
+        List<Job> jobs = service.createSeries(template(start), Set.of(), start.toLocalDate().plusWeeks(3));
+
+        assertThat(jobs).hasSize(4);
+        for (int i = 0; i < jobs.size(); i++) {
+            Job j = jobs.get(i);
+            assertThat(j.getJobDateTime()).isEqualTo(start.plusWeeks(i));
+            assertThat(j.getJobEndDateTime()).isEqualTo(start.plusWeeks(i).plusHours(2));
+            assertThat(j.getRegistrationDeadline()).isEqualTo(start.plusWeeks(i).minusDays(1));
+            assertThat(j.getCancellationDeadline()).isEqualTo(start.plusWeeks(i).minusHours(3));
+            assertThat(j.getSeriesId()).isNotNull().isEqualTo(jobs.get(0).getSeriesId());
+        }
+    }
+
+    @Test
+    void selectedWeekdaysBetweenTwoDatesOnlyMatchThoseDays() {
+        LocalDate monday = LocalDate.now().plusDays(10);
+        while (monday.getDayOfWeek() != DayOfWeek.MONDAY) {
+            monday = monday.plusDays(1);
+        }
+        LocalDateTime start = monday.atTime(9, 0);
+        List<Job> jobs = service.createSeries(template(start), Set.of(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), monday.plusDays(13));
+
+        assertThat(jobs).extracting(j -> j.getJobDateTime().getDayOfWeek())
+                .containsExactly(DayOfWeek.MONDAY, DayOfWeek.THURSDAY, DayOfWeek.MONDAY, DayOfWeek.THURSDAY);
+        assertThat(jobs).allSatisfy(j -> assertThat(j.getJobDateTime().toLocalTime()).isEqualTo(start.toLocalTime()));
+    }
+
+    @Test
+    void withoutRepeatEndDateASingleJobIsCreated() {
+        List<Job> jobs = service.createSeries(template(LocalDateTime.now().plusDays(2)), Set.of(), null);
+
+        assertThat(jobs).hasSize(1);
+        assertThat(jobs.get(0).getSeriesId()).isNull();
+    }
+
+    @Test
+    void repeatEndBeforeTheStartOrWithoutMatchingDayIsRejected() {
+        LocalDateTime start = LocalDateTime.now().plusDays(5);
+        assertThatThrownBy(() -> service.createSeries(template(start), Set.of(), start.toLocalDate().minusDays(1)))
+                .isInstanceOf(ResponseStatusException.class);
+        DayOfWeek other = start.getDayOfWeek().plus(1);
+        assertThatThrownBy(() -> service.createSeries(template(start), Set.of(other), start.toLocalDate().plusDays(0)))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void tooManyOccurrencesAreRejected() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        assertThatThrownBy(() -> service.createSeries(template(start), Set.of(DayOfWeek.values()), start.toLocalDate().plusDays(200)))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    // ---------------------------------------------------------------- scheduled registration
+
+    @Test
+    void registrationBeforeItOpensIsRejectedAndWorksAfter() {
+        User a = adult(10);
+        job.setRegistrationOpensAt(LocalDateTime.now().plusHours(2));
+        assertThatThrownBy(() -> service.register(1L, a, a, null))
+                .isInstanceOfSatisfying(ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
+
+        job.setRegistrationOpensAt(LocalDateTime.now().minusMinutes(1));
+        assertThat(service.register(1L, a, a, null).getStatus()).isEqualTo(JobRegistrationStatus.REGISTERED);
+    }
+
+    @Test
+    void registrationMustOpenBeforeItsDeadline() {
+        Job t = template(LocalDateTime.now().plusDays(5));
+        t.setRegistrationOpensAt(t.getRegistrationDeadline().plusHours(1));
+        assertThatThrownBy(() -> service.create(t)).isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void seriesShiftsTheOpeningTimeAndOnlyTheFirstJobAnnounces() {
+        LocalDateTime start = LocalDate.now().plusDays(10).atTime(18, 0);
+        Job t = template(start);
+        t.setRegistrationOpensAt(start.minusDays(3));
+        t.setSendNotification(true);
+        List<Job> jobs = service.createSeries(t, Set.of(), start.toLocalDate().plusWeeks(2));
+
+        assertThat(jobs).hasSize(3);
+        for (int i = 0; i < jobs.size(); i++) {
+            assertThat(jobs.get(i).getRegistrationOpensAt()).isEqualTo(start.plusWeeks(i).minusDays(3));
+            assertThat(jobs.get(i).isSendNotification()).isEqualTo(i == 0);
+        }
+    }
+
+    @Test
+    void dueAnnouncementsAreMarkedSoTheyAreSentOnce() {
+        job.setSendNotification(true);
+        service.markAnnounced(1L);
+        assertThat(job.getAnnouncedDateTime()).isNotNull();
+    }
+
+    // ---------------------------------------------------------------- optional deadlines, closed registration
+
+    @Test
+    void closedRegistrationRejectsEveryone() {
+        User a = adult(10);
+        job.setRegistrationClosed(true);
+        assertThat(statusOf(() -> service.register(1L, a, a, null))).isEqualTo(409);
+
+        job.setRegistrationClosed(false);
+        assertThat(service.register(1L, a, a, null).getStatus()).isEqualTo(JobRegistrationStatus.REGISTERED);
+    }
+
+    @Test
+    void jobsWithoutDeadlinesStayOpenForRegistrationAndCancellation() {
+        User a = adult(10);
+        job.setRegistrationDeadline(null);
+        job.setCancellationDeadline(null);
+        service.register(1L, a, a, null);
+        assertThat(service.cancelRegistration(1L, a, a).getStatus()).isEqualTo(JobRegistrationStatus.CANCELLED);
+    }
+
+    @Test
+    void cancellationNotAllowedBlocksUsersButNotManagers() {
+        User a = adult(10), b = adult(11);
+        service.register(1L, a, a, null);
+        service.register(1L, b, b, null);
+        job.setCancellationAllowed(false);
+
+        assertThat(statusOf(() -> service.cancelRegistration(1L, a, a))).isEqualTo(409);
+        assertThat(service.cancelRegistration(1L, b, admin).getStatus()).isEqualTo(JobRegistrationStatus.CANCELLED);
+    }
+
+    @Test
+    void cancellationDeadlineMayBeTheEndOfTheJob() {
+        Job t = template(LocalDateTime.now().plusDays(5));
+        t.setCancellationDeadline(t.getJobEndDateTime());
+        assertThat(service.create(t)).isNotNull();
+
+        Job late = template(LocalDateTime.now().plusDays(5));
+        late.setCancellationDeadline(late.getJobEndDateTime().plusMinutes(1));
+        assertThat(statusOf(() -> service.create(late))).isEqualTo(400);
     }
 }

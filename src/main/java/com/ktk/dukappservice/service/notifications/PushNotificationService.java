@@ -60,6 +60,18 @@ public class PushNotificationService {
         executor.shutdown();
     }
 
+    /**
+     * Sends the "new job" notification of every job that is due: wanted, not announced yet, and registration has
+     * opened (jobs without an opening time are due at once). Marks a job before sending so it is never sent twice.
+     * Called when a job is created and every minute by the scheduler.
+     */
+    public void announceDue() {
+        for (Job job : jobService.findDueAnnouncements(java.time.LocalDateTime.now())) {
+            jobService.markAnnounced(job.getId());
+            jobCreated(job.getId(), job.getCreateUser().getId());
+        }
+    }
+
     /** New job: eligible users of the base church (app.users.baseChurch), except its creator. */
     public void jobCreated(Long jobId, Long actorId) {
         inBackground("job created " + jobId, () -> jobService.findById(jobId).ifPresent(job -> {

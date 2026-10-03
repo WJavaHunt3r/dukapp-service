@@ -32,8 +32,12 @@ public class JobMapper implements BaseMapperInterface<Job, JobDto> {
         dto.setResponsibleName(job.getResponsible().getFullName());
         dto.setAccount(job.getAccount());
         dto.setTransactionType(job.getTransactionType());
+        dto.setRegistrationOpensAt(job.getRegistrationOpensAt());
+        dto.setSendNotification(job.isSendNotification());
         dto.setRegistrationDeadline(job.getRegistrationDeadline());
         dto.setCancellationDeadline(job.getCancellationDeadline());
+        dto.setCancellationAllowed(job.isCancellationAllowed());
+        dto.setRegistrationClosed(job.isRegistrationClosed());
         dto.setMaxParticipants(job.getMaxParticipants());
         dto.setWaitlistEnabled(job.isWaitlistEnabled());
         dto.setMinAge(job.getMinAge());
@@ -42,14 +46,18 @@ public class JobMapper implements BaseMapperInterface<Job, JobDto> {
         dto.setCreateDateTime(job.getCreateDateTime());
         dto.setCreateUserId(job.getCreateUser().getId());
         dto.setCreateUserName(job.getCreateUser().getFullName());
+        dto.setSeriesId(job.getSeriesId());
         dto.setStatus(job.getStatus());
         dto.setActivityId(job.getActivity() == null ? null : job.getActivity().getId());
         dto.setCompletedDateTime(job.getCompletedDateTime());
 
         LocalDateTime now = LocalDateTime.now();
         boolean open = job.getStatus() == JobStatus.OPEN;
-        dto.setRegistrationOpen(open && !now.isAfter(job.getRegistrationDeadline()));
-        dto.setCancellationOpen(open && !now.isAfter(job.getCancellationDeadline()));
+        dto.setRegistrationOpen(open && !job.isRegistrationClosed()
+                && (job.getRegistrationDeadline() == null || !now.isAfter(job.getRegistrationDeadline()))
+                && (job.getRegistrationOpensAt() == null || !now.isBefore(job.getRegistrationOpensAt())));
+        dto.setCancellationOpen(open && job.isCancellationAllowed()
+                && (job.getCancellationDeadline() == null || !now.isAfter(job.getCancellationDeadline())));
         return dto;
     }
 
@@ -72,8 +80,12 @@ public class JobMapper implements BaseMapperInterface<Job, JobDto> {
         job.setDescription(dto.getDescription().trim());
         job.setAccount(dto.getAccount());
         job.setTransactionType(dto.getTransactionType());
+        job.setRegistrationOpensAt(dto.getRegistrationOpensAt());
+        job.setSendNotification(dto.isSendNotification());
         job.setRegistrationDeadline(dto.getRegistrationDeadline());
         job.setCancellationDeadline(dto.getCancellationDeadline());
+        job.setCancellationAllowed(dto.isCancellationAllowed());
+        job.setRegistrationClosed(dto.isRegistrationClosed());
         job.setMaxParticipants(dto.getMaxParticipants());
         job.setWaitlistEnabled(dto.isWaitlistEnabled());
         job.setMinAge(dto.getMinAge());

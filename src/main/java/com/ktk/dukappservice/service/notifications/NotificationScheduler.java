@@ -34,6 +34,16 @@ public class NotificationScheduler implements ApplicationRunner {
         scheduleService.ensureOnTrackEmailSchedule();
     }
 
+    /** Sends the "new job" notifications of jobs whose registration has just opened. */
+    @Scheduled(cron = "0 * * * * *")
+    public void announceNewJobs() {
+        try {
+            pushNotificationService.announceDue();
+        } catch (Exception e) {
+            LOG.error("Announcing new jobs failed", e);
+        }
+    }
+
     @Scheduled(cron = "0 * * * * *")
     public void runDueSchedules() {
         LocalDateTime now = LocalDateTime.now();

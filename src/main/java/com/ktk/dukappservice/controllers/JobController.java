@@ -9,6 +9,7 @@ import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.JobCompleteDto;
 import com.ktk.dukappservice.dto.JobDto;
+import com.ktk.dukappservice.dto.JobRecurrenceDto;
 import com.ktk.dukappservice.dto.JobRegisterDto;
 import com.ktk.dukappservice.enums.JobRegistrationStatus;
 import com.ktk.dukappservice.enums.JobStatus;
@@ -98,9 +99,22 @@ public class JobController {
         job.setCreateUser(user);
         job.setEmployer(employer);
         job.setResponsible(responsible);
-        Job created = jobService.create(job);
-        pushNotificationService.jobCreated(created.getId(), user.getId());
-        return ResponseEntity.ok(toDto(created, user));
+        JobRecurrenceDto recurrence = dto.getRecurrence();
+        List<Job> created = jobService.createSeries(job, recurrence == null ? null : recurrence.getDaysOfWeek(),
+                recurrence == null ? null : recurrence.getRepeatUntil());
+        // Sends it now if registration is open already; otherwise the scheduler does when it opens.
+        // A series announces only its first job, not every occurrence.
+        pushNotificationService.announceDue();
+        return ResponseEntity.ok(toDto(created.get(0), user));
+    }
+
+    /** Cancels all open, not yet started occurrences of a repeating job. Returns how many were cancelled. */
+    @PostMapping("/series/{seriesId}/cancel")
+    public ResponseEntity<?> cancelSeries(@PathVariable String seriesId, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
+        List<Job> cancelled = jobService.cancelSeries(seriesId, user);
+        cancelled.forEach(j -> pushNotificationService.jobCancelled(j.getId(), user.getId()));
+        return ResponseEntity.ok(cancelled.size());
     }
 
     @PutMapping("/{id}")

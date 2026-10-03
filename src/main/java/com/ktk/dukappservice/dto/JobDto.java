@@ -41,11 +41,23 @@ public class JobDto {
     @NotNull
     private TransactionType transactionType;
 
-    @NotNull
+    /** Registration opens at this time; null = open right away. Must be before the registration deadline. */
+    private LocalDateTime registrationOpensAt;
+
+    /** Send a "new job" push when registration opens (right away if it opens at once). */
+    private boolean sendNotification = true;
+
+    /** Last moment to register; null = no deadline. */
     private LocalDateTime registrationDeadline;
 
-    @NotNull
+    /** Registered users can cancel on their own until then; null = no deadline. */
     private LocalDateTime cancellationDeadline;
+
+    /** False: registered users can't cancel on their own at all. */
+    private boolean cancellationAllowed = true;
+
+    /** True: nobody can register until the job is opened again. */
+    private boolean registrationClosed;
 
     /** Number of places, null for unlimited. */
     @Min(1)
@@ -62,7 +74,12 @@ public class JobDto {
     /** Null means open to everyone. */
     private Gender genderRestriction;
 
+    /** Only read when creating: repeats the job on the given weekdays until a date. */
+    private JobRecurrenceDto recurrence;
+
     // ---- read-only
+    /** Shared by the occurrences of a repeating job. */
+    private String seriesId;
     private LocalDateTime createDateTime;
     private Long createUserId;
     private String createUserName;
