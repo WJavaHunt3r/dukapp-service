@@ -47,6 +47,7 @@ public class UserMapper extends BaseMapper<User, UserDto> {
         dto.setRoleNames(user.getRoles().stream().map(AppRole::getName).sorted().toList());
         dto.setPermissions(user.getPermissions());
         dto.setProfileIncomplete(user.isProfileIncomplete());
+        dto.setChurchId(user.getChurch() == null ? null : user.getChurch().getId());
         return dto;
     }
 }

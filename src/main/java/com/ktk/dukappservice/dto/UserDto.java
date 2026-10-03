@@ -59,4 +59,7 @@ public class UserDto {
     private Long bufeId;
 
     private double points;
+
+    /** Read-only (not copied back in UserMapper.dtoToEntity). Users without a church only get the balance and profile. */
+    private Long churchId;
 }
