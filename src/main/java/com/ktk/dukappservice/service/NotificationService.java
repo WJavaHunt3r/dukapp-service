@@ -1,19 +1,21 @@
 package com.ktk.dukappservice.service;
 
+import com.ktk.dukappservice.data.notifications.NotificationPreferenceService;
 import com.ktk.dukappservice.data.paceuserround.PaceUserRoundRepository;
 import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.data.userstatus.StatusTotals;
 import com.ktk.dukappservice.data.userstatus.UserStatus;
 import com.ktk.dukappservice.data.userstatus.UserStatusService;
+import com.ktk.dukappservice.enums.NotificationType;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -24,18 +26,24 @@ public class NotificationService {
     private final UserStatusService userStatusService;
     private final PaceUserRoundRepository paceUserRoundRepository;
     private final MicrosoftService microsoftService;
+    private final NotificationPreferenceService notificationPreferenceService;
 
     public NotificationService(RoundService roundService,
                                UserStatusService userStatusService,
                                PaceUserRoundRepository paceUserRoundRepository,
-                               MicrosoftService microsoftService) {
+                               MicrosoftService microsoftService,
+                               NotificationPreferenceService notificationPreferenceService) {
+        this.notificationPreferenceService = notificationPreferenceService;
         this.roundService = roundService;
         this.userStatusService = userStatusService;
         this.paceUserRoundRepository = paceUserRoundRepository;
         this.microsoftService = microsoftService;
     }
 
-    @Scheduled(cron = "0 0 17 * * TUE")
+    /**
+     * Run by {@code NotificationScheduler} at the time set in the ON_TRACK_EMAIL notification schedule.
+     * Users who switched the e-mail off in their notification preferences are skipped.
+     */
     public void sendOnTrackEmails() {
         Round currentRound = roundService.getCurrentRound();
         int currentYear = LocalDate.now().getYear();
@@ -43,8 +51,10 @@ public class NotificationService {
         log.info("Starting scheduled on-track email notification for year: {}", currentYear);
 
         Page<UserStatus> statuses = userStatusService.fetchByQuery(currentYear, null);
+        Set<Long> optedOut = notificationPreferenceService.findDisabledUserIds(NotificationType.ON_TRACK_EMAIL);
 
         List<CompletableFuture<Void>> emailTasks = statuses.stream()
+                .filter(status -> !optedOut.contains(status.getUser().getId()))
                 .map(status -> CompletableFuture.runAsync(() -> processEmailForUser(status, currentRound)))
                 .toList();
 

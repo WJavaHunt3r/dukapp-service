@@ -21,10 +21,12 @@ import java.util.List;
 public class EnumCheckConstraintCleanup implements ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(EnumCheckConstraintCleanup.class);
 
-    /** table -> constraint, for enums new values get added to (Permission, AuditAction). */
+    /** table -> constraint, for enums new values get added to (Permission, AuditAction, NotificationType). */
     private static final List<String[]> CONSTRAINTS = List.of(
             new String[]{"role_permissions", "role_permissions_permission_check"},
-            new String[]{"audit_log", "audit_log_action_check"});
+            new String[]{"audit_log", "audit_log_action_check"},
+            new String[]{"notification_preferences", "notification_preferences_type_check"},
+            new String[]{"notification_schedules", "notification_schedules_type_check"});
 
     private final JdbcTemplate jdbcTemplate;
 

@@ -1,0 +1,49 @@
+package com.ktk.dukappservice.service.notifications;
+
+import com.ktk.dukappservice.data.jobs.Job;
+import com.ktk.dukappservice.data.users.User;
+import com.ktk.dukappservice.enums.JobRegistrationStatus;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/** Push notification texts, in Hungarian like the e-mails. */
+final class NotificationTexts {
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+    private static final int MAX_DESCRIPTION = 80;
+
+    private NotificationTexts() {
+    }
+
+    record Text(String title, String body) {
+    }
+
+    static Text jobNew(Job job) {
+        return new Text("Új munka", describe(job));
+    }
+
+    static Text jobCancelled(Job job) {
+        return new Text("Munka lemondva", "Elmarad: " + describe(job));
+    }
+
+    static Text registeredByOther(Job job, User actor, JobRegistrationStatus status) {
+        String action = status == JobRegistrationStatus.WAITLISTED ? "várólistára tett" : "jelentkeztetett";
+        return new Text("Jelentkeztettek", actor.getFullName() + " " + action + ": " + describe(job));
+    }
+
+    static Text transactionsCreated(List<String> descriptions) {
+        if (descriptions.size() == 1) {
+            String description = descriptions.getFirst();
+            return new Text("Új tranzakció", description == null || description.isBlank() ? "Új tranzakció került rögzítésre." : truncate(description));
+        }
+        return new Text("Új tranzakciók", descriptions.size() + " új tranzakció került rögzítésre.");
+    }
+
+    private static String describe(Job job) {
+        return truncate(job.getDescription()) + " (" + DATE.format(job.getJobDateTime()) + ")";
+    }
+
+    private static String truncate(String text) {
+        return text.length() <= MAX_DESCRIPTION ? text : text.substring(0, MAX_DESCRIPTION - 1) + "…";
+    }
+}

@@ -1,6 +1,8 @@
 package com.ktk.dukappservice.data.auditlog;
 
 import com.ktk.dukappservice.data.BaseEntity;
+import com.ktk.dukappservice.data.notifications.DeviceToken;
+import com.ktk.dukappservice.data.notifications.NotificationSchedule;
 import com.ktk.dukappservice.data.paceteamround.PaceTeamRound;
 import com.ktk.dukappservice.data.paceuserround.PaceUserRound;
 import com.ktk.dukappservice.data.rounds.Round;
@@ -38,14 +40,15 @@ public class AuditEntityListener implements PostCommitInsertEventListener, PostC
 
     /** Bookkeeping and derived statistics that are recalculated constantly. */
     private static final Set<Class<?>> EXCLUDED_ENTITIES = Set.of(
-            AuditLog.class, RefreshToken.class, UserStatus.class, UserRound.class,
+            AuditLog.class, RefreshToken.class, DeviceToken.class, UserStatus.class, UserRound.class,
             PaceUserRound.class, PaceTeamRound.class, TeamRound.class);
 
     /** Recalculated fields: an update that only changes these is not logged. */
     private static final Map<Class<?>, Set<String>> DERIVED_FIELDS = Map.of(
             User.class, Set.of(User.Fields.points, User.Fields.currentMyShareCredit),
             Team.class, Set.of(Team.Fields.points),
-            Round.class, Set.of(Round.Fields.samvirkChurchStatus));
+            Round.class, Set.of(Round.Fields.samvirkChurchStatus),
+            NotificationSchedule.class, Set.of(NotificationSchedule.Fields.lastSentDateTime));
 
     private static final int MAX_VALUE_LENGTH = 500;
     private static final String MASK = "***";

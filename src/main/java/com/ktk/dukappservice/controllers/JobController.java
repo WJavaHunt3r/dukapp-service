@@ -14,6 +14,7 @@ import com.ktk.dukappservice.enums.JobRegistrationStatus;
 import com.ktk.dukappservice.enums.JobStatus;
 import com.ktk.dukappservice.mapper.ActivityMapper;
 import com.ktk.dukappservice.mapper.JobMapper;
+import com.ktk.dukappservice.service.notifications.PushNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,8 +47,11 @@ public class JobController {
     private final JobMapper jobMapper;
     private final UserService userService;
     private final ActivityMapper activityMapper;
+    private final PushNotificationService pushNotificationService;
 
-    public JobController(JobService jobService, JobMapper jobMapper, UserService userService, ActivityMapper activityMapper) {
+    public JobController(JobService jobService, JobMapper jobMapper, UserService userService, ActivityMapper activityMapper,
+                         PushNotificationService pushNotificationService) {
+        this.pushNotificationService = pushNotificationService;
         this.jobService = jobService;
         this.jobMapper = jobMapper;
         this.userService = userService;
@@ -94,7 +98,9 @@ public class JobController {
         job.setCreateUser(user);
         job.setEmployer(employer);
         job.setResponsible(responsible);
-        return ResponseEntity.ok(toDto(jobService.create(job), user));
+        Job created = jobService.create(job);
+        pushNotificationService.jobCreated(created.getId(), user.getId());
+        return ResponseEntity.ok(toDto(created, user));
     }
 
     @PutMapping("/{id}")
@@ -116,7 +122,9 @@ public class JobController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<?> cancelJob(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getCurrentUser(userDetails);
-        return ResponseEntity.ok(toDto(jobService.cancelJob(id, user), user));
+        Job cancelled = jobService.cancelJob(id, user);
+        pushNotificationService.jobCancelled(id, user.getId());
+        return ResponseEntity.ok(toDto(cancelled, user));
     }
 
     @GetMapping("/{id}/registrations")
@@ -144,6 +152,7 @@ public class JobController {
         User actor = userService.getCurrentUser(userDetails);
         User target = resolveTarget(body == null ? null : body.getUserId(), actor);
         JobRegistration registration = jobService.register(id, target, actor, body == null ? null : body.getComment());
+        pushNotificationService.registeredByOther(id, target, actor, registration.getStatus());
         return ResponseEntity.ok(jobMapper.registrationToDto(registration, true, null));
     }
 

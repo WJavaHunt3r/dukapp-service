@@ -12,6 +12,7 @@ import com.ktk.dukappservice.dto.TransactionItemDto;
 import com.ktk.dukappservice.enums.TransactionType;
 import com.ktk.dukappservice.mapper.TransactionItemMapper;
 import com.ktk.dukappservice.service.TransactionServiceUtils;
+import com.ktk.dukappservice.service.notifications.PushNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/transactionItem")
@@ -34,8 +34,10 @@ public class TransactionItemsController {
     private final TransactionItemMapper modelMapper;
     private final TransactionService transactionService;
     private final TransactionServiceUtils transactionServiceUtils;
+    private final PushNotificationService pushNotificationService;
 
-    public TransactionItemsController(TransactionItemService transactionItemService, UserService userService, RoundService roundService, TransactionItemMapper modelMapper, TransactionService transactionService, TransactionServiceUtils transactionServiceUtils) {
+    public TransactionItemsController(TransactionItemService transactionItemService, UserService userService, RoundService roundService, TransactionItemMapper modelMapper, TransactionService transactionService, TransactionServiceUtils transactionServiceUtils, PushNotificationService pushNotificationService) {
+        this.pushNotificationService = pushNotificationService;
         this.transactionItemService = transactionItemService;
         this.userService = userService;
         this.roundService = roundService;
@@ -47,6 +49,28 @@ public class TransactionItemsController {
     @PostMapping
     @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
     public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionItemDto transactionItem, @AuthenticationPrincipal UserDetails userDetails) {
+        User createUser = userService.getCurrentUser(userDetails);
+        Map<Long, List<String>> created = new HashMap<>();
+        ResponseEntity<?> response = createItem(transactionItem, createUser, created);
+        pushNotificationService.transactionsCreated(created, createUser.getId());
+        return response;
+    }
+
+    @PostMapping("/items")
+    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
+    public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems, @AuthenticationPrincipal UserDetails userDetails) {
+        User createUser = userService.getCurrentUser(userDetails);
+        Map<Long, List<String>> created = new HashMap<>();
+        transactionItems.forEach(item -> createItem(item, createUser, created));
+        // One push per user for the whole batch
+        pushNotificationService.transactionsCreated(created, createUser.getId());
+//        transactionServiceUtils.calculateAllTeamStatus();
+        return ResponseEntity.ok().body("Successfully added");
+
+    }
+
+    /** Creates one item; on success adds its description to {@code created} under the item's user. */
+    private ResponseEntity<?> createItem(TransactionItemDto transactionItem, User createUser, Map<Long, List<String>> created) {
         Optional<Transaction> transaction = transactionService.findById(transactionItem.getTransactionId());
         if (transaction.isEmpty()) {
             return ResponseEntity.status(400).body("No transaction found with id: " + transactionItem.getTransactionId());
@@ -62,24 +86,14 @@ public class TransactionItemsController {
             return ResponseEntity.status(400).body("No round found with id: " + transactionItem.getRoundId());
         }
 
-        User createUser = userService.getCurrentUser(userDetails);
-
         TransactionItem entity = new TransactionItem();
         entity.setCreateUser(createUser);
         entity.setUser(user.get());
         entity.setRound(round.get());
-        transactionItemService.save(modelMapper.dtoToEntity(transactionItem, entity));
+        TransactionItem saved = transactionItemService.save(modelMapper.dtoToEntity(transactionItem, entity));
         transactionServiceUtils.updateUserStatus(round.get(), user.get());
+        created.computeIfAbsent(user.get().getId(), id -> new ArrayList<>()).add(saved.getDescription());
         return ResponseEntity.status(200).build();
-    }
-
-    @PostMapping("/items")
-    @PreAuthorize("hasAuthority('TRANSACTION_MANAGE')")
-    public ResponseEntity<?> addTransactions(@Valid @RequestBody List<TransactionItemDto> transactionItems, @AuthenticationPrincipal UserDetails userDetails) {
-        transactionItems.forEach(item -> addTransaction(item, userDetails));
-//        transactionServiceUtils.calculateAllTeamStatus();
-        return ResponseEntity.ok().body("Successfully added");
-
     }
 
     @DeleteMapping("/{id}")

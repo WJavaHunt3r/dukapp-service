@@ -176,6 +176,15 @@ public class JobService extends BaseService<Job, Long> {
                 && child.getAge() <= ADULT_AGE;
     }
 
+    public boolean isEligible(Job job, User user) {
+        try {
+            checkEligibility(job, user);
+            return true;
+        } catch (ResponseStatusException e) {
+            return false;
+        }
+    }
+
     /** Age is measured on the day of the job. A missing birth date / gender never passes a limit that needs it. */
     public void checkEligibility(Job job, User user) {
         if (job.getGenderRestriction() != null) {

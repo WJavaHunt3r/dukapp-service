@@ -44,5 +44,9 @@ public enum Permission {
     /** Gets the ADMIN role in the external booking system. */
     BOOKING_ADMIN,
     /** Read the audit log (GET /api/auditLog). */
-    AUDIT_LOG_VIEW
+    AUDIT_LOG_VIEW,
+    /** Send one-off push notifications to all users or chosen roles. */
+    NOTIFICATION_SEND,
+    /** Manage the weekly push notifications and the schedule of the "on track" e-mail. */
+    NOTIFICATION_SCHEDULE_MANAGE
 }
