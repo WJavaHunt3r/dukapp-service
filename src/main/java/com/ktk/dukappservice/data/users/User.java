@@ -3,11 +3,15 @@ package com.ktk.dukappservice.data.users;
 import com.ktk.dukappservice.data.BaseEntity;
 import com.ktk.dukappservice.data.church.Church;
 import com.ktk.dukappservice.data.paceteam.PaceTeam;
+import com.ktk.dukappservice.data.roles.AppRole;
 import com.ktk.dukappservice.data.teams.Team;
+import com.ktk.dukappservice.enums.Gender;
+import com.ktk.dukappservice.enums.Permission;
 import com.ktk.dukappservice.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.*;
@@ -16,6 +20,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -25,6 +32,9 @@ import java.time.Period;
 })
 @FieldNameConstants
 public class User extends BaseEntity<User, Long> {
+
+    /** Stored when a name is unknown (e.g. Google didn't send it); see {@link #isProfileIncomplete()}. */
+    public static final String NAME_PLACEHOLDER = "-";
 
     @Size(max = 50)
     @Column(name = "FIRSTNAME", length = 50)
@@ -41,6 +51,10 @@ public class User extends BaseEntity<User, Long> {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "BIRTH_DATE")
     private LocalDate birthDate;
+
+    @Column(name = "GENDER", length = 10)
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @ManyToOne
     @JoinColumn(name = "TEAMS")
@@ -66,10 +80,21 @@ public class User extends BaseEntity<User, Long> {
     @NotEmpty
     private String password;
 
+    /**
+     * Legacy single role, kept in sync with {@link #roles} for older clients and the booking system.
+     * Use {@link #roles} / {@link #hasPermission(Permission)} for authorization.
+     */
     @Column(name = "ROLE")
     @Enumerated(EnumType.STRING)
     @NotNull
     private Role role;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "USER_ROLES",
+            joinColumns = @JoinColumn(name = "USER_ID"),
+            inverseJoinColumns = @JoinColumn(name = "ROLE_ID"))
+    @BatchSize(size = 50)
+    private Set<AppRole> roles = new HashSet<>();
 
     @Column(name = "MYSHARE_ID")
     private Long myShareID;
@@ -109,12 +134,33 @@ public class User extends BaseEntity<User, Long> {
         return lastname + " " + firstname;
     }
 
-    public boolean isAdmin() {
-        return this.role == Role.ADMIN;
+    /** True until the user has replaced a placeholder first/last name with their real one. */
+    public boolean isProfileIncomplete() {
+        return NAME_PLACEHOLDER.equals(firstname) || NAME_PLACEHOLDER.equals(lastname);
     }
 
-    public boolean isTeamLeader() {
-        return this.role == Role.TEAM_LEADER;
+    public void setRoles(Set<AppRole> roles) {
+        this.roles = roles;
+        this.role = deriveLegacyRole(roles);
+    }
+
+    public Set<Permission> getPermissions() {
+        Set<Permission> permissions = EnumSet.noneOf(Permission.class);
+        roles.forEach(r -> permissions.addAll(r.getPermissions()));
+        return permissions;
+    }
+
+    public boolean hasPermission(Permission permission) {
+        return roles.stream().anyMatch(r -> r.getPermissions().contains(permission));
+    }
+
+    private static Role deriveLegacyRole(Set<AppRole> roles) {
+        for (Role legacy : new Role[]{Role.ADMIN, Role.TEAM_LEADER, Role.HELPER}) {
+            if (roles.stream().anyMatch(r -> legacy.name().equals(r.getName()))) {
+                return legacy;
+            }
+        }
+        return Role.USER;
     }
 
     public int getAge() {
@@ -125,6 +171,9 @@ public class User extends BaseEntity<User, Long> {
     }
 
     public int getAgeAtDate(LocalDate date) {
+        if (birthDate == null) {
+            return 0;
+        }
         return Period.between(birthDate, date).getYears();
     }
 }

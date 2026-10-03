@@ -7,6 +7,7 @@ import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.DonationDto;
 import com.ktk.dukappservice.mapper.DonationMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -42,18 +43,13 @@ public class DonationsController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> postDonation(@Valid @RequestBody DonationDto donation, @RequestParam("userId") Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user found with id: " + userId);
-        }
-        if (!user.get().isAdmin()) {
-            return ResponseEntity.status(404).body("Unauthorized request");
-        }
+    @PreAuthorize("hasAuthority('DONATION_MANAGE')")
+    public ResponseEntity<?> postDonation(@Valid @RequestBody DonationDto donation) {
         return ResponseEntity.status(200).body(mapper.entityToDto(donationService.save(mapper.dtoToEntity(donation, new Donation()))));
     }
 
     @PutMapping("/{donationId}")
+    @PreAuthorize("hasAuthority('DONATION_MANAGE')")
     public ResponseEntity<?> putDonation(@Valid @RequestBody DonationDto donation, @PathVariable Long donationId) {
         if (donationService.findById(donationId).isEmpty() || !donation.getId().equals(donationId)) {
             return ResponseEntity.status(400).body("Invalid donationId");
@@ -62,6 +58,7 @@ public class DonationsController {
     }
 
     @DeleteMapping("/{donationId}")
+    @PreAuthorize("hasAuthority('DONATION_MANAGE')")
     public ResponseEntity<?> deleteDonation(@PathVariable Long donationId) {
         if (donationService.findById(donationId).isEmpty()) {
             return ResponseEntity.status(400).body("Invalid donationId");

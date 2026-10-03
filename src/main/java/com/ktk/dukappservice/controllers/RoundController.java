@@ -5,6 +5,7 @@ import com.ktk.dukappservice.data.rounds.RoundService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,11 +33,13 @@ public class RoundController {
     }
 
     @PostMapping()
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity postRound(@Valid @RequestBody Round round) {
         return ResponseEntity.status(200).body(roundService.save(round));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity putRound(@Valid @RequestBody Round round, @PathVariable Long id) {
         if (roundService.findById(id).isEmpty() || !round.getId().equals(id)) {
             return ResponseEntity.status(400).body("Invalid roundId");

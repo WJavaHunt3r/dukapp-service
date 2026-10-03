@@ -9,9 +9,12 @@ import com.ktk.dukappservice.data.usercamps.UserCampService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.UserCampDto;
+import com.ktk.dukappservice.enums.Permission;
 import com.ktk.dukappservice.mapper.UserCampMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -88,13 +91,15 @@ public class UserCampController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> postUserCamp(@Valid @RequestBody UserCampDto userCamp, @RequestParam Long userId) {
-        Optional<User> user = userService.findById(userId);
+    public ResponseEntity<?> postUserCamp(@Valid @RequestBody UserCampDto userCamp, @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.getCurrentUser(userDetails);
+        Long targetUserId = userCamp.getUser() == null ? null : userCamp.getUser().getId();
+        Optional<User> user = targetUserId == null ? Optional.empty() : userService.findById(targetUserId);
         if (user.isEmpty()) {
-            return ResponseEntity.status(404).body("No user found with id: " + userId);
+            return ResponseEntity.status(404).body("No user found with id: " + targetUserId);
         }
-        if (!user.get().isAdmin() || !userId.equals(userCamp.getUser().getId())) {
-            return ResponseEntity.status(404).body("Unauthorized request");
+        if (!currentUser.getId().equals(targetUserId) && !currentUser.hasPermission(Permission.CAMP_MANAGE)) {
+            return ResponseEntity.status(403).body("Permission denied!");
         }
         UserCamp newUC = new UserCamp();
         newUC.setUser(user.get());
@@ -102,10 +107,14 @@ public class UserCampController {
     }
 
     @PutMapping("/{userCampId}")
-    public ResponseEntity<?> putUserCamp(@Valid @RequestBody UserCampDto userCampDto, @PathVariable Long userCampId) {
+    public ResponseEntity<?> putUserCamp(@Valid @RequestBody UserCampDto userCampDto, @PathVariable Long userCampId, @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.getCurrentUser(userDetails);
         Optional<UserCamp> userCamp = userCampService.findById(userCampId);
         if (userCamp.isEmpty() || !userCampDto.getId().equals(userCampId)) {
             return ResponseEntity.status(400).body("Invalid userCampId");
+        }
+        if (!userCamp.get().getUser().getId().equals(currentUser.getId()) && !currentUser.hasPermission(Permission.CAMP_MANAGE)) {
+            return ResponseEntity.status(403).body("Permission denied!");
         }
         return ResponseEntity.status(200).body(userCampMapper.entityToDto(userCampService.save(userCampMapper.dtoToEntity(userCampDto, userCamp.get()))));
     }

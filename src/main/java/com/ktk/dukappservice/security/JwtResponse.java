@@ -7,9 +7,10 @@ public record JwtResponse(
     String refreshToken,
     String type, // Usually "Bearer"
     String username,
-    List<String> roles
+    List<String> roles,
+    List<String> permissions
 ) {
-    public JwtResponse(String token,String refreshToken, String username, List<String> roles) {
-        this(token, refreshToken, "Bearer", username, roles);
+    public JwtResponse(String token, String refreshToken, String username, List<String> roles, List<String> permissions) {
+        this(token, refreshToken, "Bearer", username, roles, permissions);
     }
 }

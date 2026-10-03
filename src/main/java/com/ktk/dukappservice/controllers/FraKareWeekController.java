@@ -4,6 +4,7 @@ import com.ktk.dukappservice.data.frakareweek.FraKareWeek;
 import com.ktk.dukappservice.data.frakareweek.FraKareWeekService;
 import com.ktk.dukappservice.data.userfrakarestreak.UserFraKareWeekService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class FraKareWeekController {
     }
 
     @PostMapping("/createCurrentFrakareWeek")
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity createFraKareWeek() {
         if (userFraKareWeekService.fetchByQuery(null, LocalDate.now().get(WeekFields.ISO.weekOfWeekBasedYear()), null, null).isEmpty()) {
             fraKareWeekService.createFraKareWeek();

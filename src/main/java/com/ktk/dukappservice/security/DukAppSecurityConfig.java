@@ -1,5 +1,7 @@
 package com.ktk.dukappservice.security;
 
+import com.ktk.dukappservice.data.auditlog.AuditLogService;
+import com.ktk.dukappservice.enums.AuditAction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -7,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,9 +24,11 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @EnableWebSecurity
+@EnableMethodSecurity
 @Configuration
 public class DukAppSecurityConfig {
 
@@ -68,7 +73,7 @@ public class DukAppSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtAuthenticationFilter jwtFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtAuthenticationFilter jwtFilter, AuditLogService auditLogService) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -78,14 +83,18 @@ public class DukAppSecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()
+                        // Payment provider callbacks create/update payments without a login; DELETE is guarded by @PreAuthorize
                         .requestMatchers("/api/payments/*").permitAll()
                         .requestMatchers("/api/payments").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "/api/goal").hasRole(com.ktk.dukappservice.enums.Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/api/goal").authenticated()
                         .anyRequest().authenticated()
                 )
+                // Authenticated users refused by a permission check (anonymous ones get a 401 and aren't logged)
+                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler((request, response, e) -> {
+                    Map<String, Object> details = new LinkedHashMap<>();
+                    details.put("reason", e.getMessage());
+                    auditLogService.record(AuditAction.ACCESS_DENIED, null, null, details);
+                    response.sendError(403, e.getMessage());
+                }))
                 // Spring Boot 4 encourages granular filter ordering
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

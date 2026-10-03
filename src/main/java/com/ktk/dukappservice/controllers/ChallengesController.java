@@ -6,6 +6,7 @@ import com.ktk.dukappservice.service.FileStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,7 @@ public class ChallengesController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CHALLENGE_MANAGE')")
     public ResponseEntity<String> createChallenge(@RequestBody Challenges challenge,
                                                   @RequestParam("image") MultipartFile imageFile) {
         String imageName = fileStorageService.store(imageFile); // Save file and get its name
@@ -52,6 +54,7 @@ public class ChallengesController {
     }
 
     @PutMapping("/{challengesId}")
+    @PreAuthorize("hasAuthority('CHALLENGE_MANAGE')")
     public ResponseEntity putChallenges(@Valid @RequestBody Challenges challenges, @PathVariable Long challengesId) {
         if (challengesService.findById(challengesId).isEmpty() || !challenges.getId().equals(challengesId)) {
             return ResponseEntity.status(400).body("Invalid challengesId");
@@ -61,6 +64,7 @@ public class ChallengesController {
     }
 
     @DeleteMapping("/{challengesId}")
+    @PreAuthorize("hasAuthority('CHALLENGE_MANAGE')")
     public ResponseEntity deleteChallenges(@PathVariable Long challengesId) {
         if (challengesService.findById(challengesId).isPresent()) {
             return ResponseEntity.status(400).body("Invalid challengesId");

@@ -6,13 +6,14 @@ import com.ktk.dukappservice.data.activityitems.ActivityItemService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.ActivityDto;
-import com.ktk.dukappservice.enums.Role;
+import com.ktk.dukappservice.enums.Permission;
 import com.ktk.dukappservice.mapper.ActivityMapper;
 import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.microsoft.graph.models.odataerrors.ODataError;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -80,23 +81,24 @@ public class ActivityController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> putActivity(@Valid @RequestBody ActivityDto activityDto, @PathVariable Long id) {
+    public ResponseEntity<?> putActivity(@Valid @RequestBody ActivityDto activityDto, @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
         Optional<Activity> activity = activityService.findById(id);
         if (activity.isEmpty() || !activityDto.getId().equals(id)) {
             return ResponseEntity.status(400).body("Invalid activityId");
+        }
+        if (!activity.get().getCreateUser().getId().equals(user.getId()) && !user.hasPermission(Permission.ACTIVITY_MANAGE_ALL)) {
+            return ResponseEntity.status(403).body("Permission denied!");
         }
         return ResponseEntity.status(200).body(activityMapper.entityToDto(activityService.save(activityMapper.dtoToEntity(activityDto, activity.get()))));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteActivity(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
+    public ResponseEntity<?> deleteActivity(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
         Optional<Activity> item = activityService.findById(id);
         if (item.isPresent()) {
-            if (!item.get().getCreateUser().getId().equals(user.get().getId()) && !user.get().getRole().equals(Role.ADMIN)) {
+            if (!item.get().getCreateUser().getId().equals(user.getId()) && !user.hasPermission(Permission.ACTIVITY_MANAGE_ALL)) {
                 return ResponseEntity.status(403).body("Permission denied!");
             }
             if (item.get().isRegisteredInApp() || item.get().isRegisteredInMyShare()) {
@@ -112,14 +114,9 @@ public class ActivityController {
     }
 
     @PostMapping("/{id}/register")
-    public ResponseEntity<?> registerActivity(@PathVariable Long id, @RequestParam Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (user.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied:");
-        }
+    @PreAuthorize("hasAuthority('ACTIVITY_REGISTER')")
+    public ResponseEntity<?> registerActivity(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
         Optional<Activity> activity = activityService.findById(id);
         if (activity.isEmpty()) {
             return ResponseEntity.status(400).body("No activity with id:" + id);
@@ -130,7 +127,7 @@ public class ActivityController {
 
         Long transactionId = null;
         try {
-            transactionId = activityService.registerActivity(activity.get(), user.get());
+            transactionId = activityService.registerActivity(activity.get(), user);
             microsoftService.sendActivityToSharePointListItem(activity.get());
             activity.get().setRegisteredInTeams(true);
         } catch (Exception e) {
@@ -147,14 +144,8 @@ public class ActivityController {
     }
 
     @PostMapping("/{id}/registerInTeams")
-    public ResponseEntity<?> registerActivityInTeams(@PathVariable Long id, @RequestParam Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-        if (user.get().getRole().equals(Role.USER)) {
-            return ResponseEntity.status(403).body("Permission denied:");
-        }
+    @PreAuthorize("hasAuthority('ACTIVITY_REGISTER')")
+    public ResponseEntity<?> registerActivityInTeams(@PathVariable Long id) {
         Optional<Activity> activity = activityService.findById(id);
         if (activity.isEmpty()) {
             return ResponseEntity.status(400).body("No activity with id:" + id);

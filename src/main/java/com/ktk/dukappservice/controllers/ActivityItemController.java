@@ -9,7 +9,7 @@ import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.ActivityItemDto;
-import com.ktk.dukappservice.enums.Role;
+import com.ktk.dukappservice.enums.Permission;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
@@ -77,14 +77,11 @@ public class ActivityItemController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteActivityItem(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        Optional<User> user = userService.findByUsername(userDetails.getUsername());
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with username:" + userDetails.getUsername());
-        }
+        User user = userService.getCurrentUser(userDetails);
 
         Optional<ActivityItem> item = activityItemService.findById(id);
         if (item.isPresent()) {
-            if (!user.get().getRole().equals(Role.ADMIN) && !Objects.equals(user.get().getId(), item.get().getCreateUser().getId())) {
+            if (!user.hasPermission(Permission.ACTIVITY_MANAGE_ALL) && !Objects.equals(user.getId(), item.get().getCreateUser().getId())) {
                 return ResponseEntity.status(403).body("Permission denied!");
             }
             if (item.get().getActivity().isRegisteredInApp()) {

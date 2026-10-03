@@ -3,6 +3,7 @@ package com.ktk.dukappservice.controllers;
 import com.ktk.dukappservice.data.teams.TeamService;
 import com.ktk.dukappservice.data.users.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ public class TeamsController {
     }
 
     @GetMapping("/recalculate")
+    @PreAuthorize("hasAuthority('SEASON_MANAGE')")
     public ResponseEntity<?> recalculateAllPoint(){
         teamService.recalculateAllTeamPoints();
         return ResponseEntity.status(200).build();

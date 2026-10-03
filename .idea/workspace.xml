@@ -1,138 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="Spouses">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/service/Utils.java" afterDir="false" />
+    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="Havi OnTrack lokal">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f/storage_v2/_src_/database/WORKHUDB.3NDCMA/schema/INFORMATION_SCHEMA.NBgcMw.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f/storage_v2/_src_/database/WORKHUDB.3NDCMA/schema/INFORMATION_SCHEMA.NBgcMw.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f/storage_v2/_src_/database/WORKHUDB.3NDCMA/schema/PUBLIC.aaZQjQ.zip" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/f2f61805-8c7a-4da7-82d5-b47987b60e5f/storage_v2/_src_/database/WORKHUDB.3NDCMA/schema/PUBLIC.aaZQjQ.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__ch_qos_logback_logback_classic_1_2_9.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__ch_qos_logback_logback_core_1_2_9.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_annotations_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_core_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_databind_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jdk8_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jsr310_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_module_jackson_module_parameter_names_2_12_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_jayway_jsonpath_json_path_2_5_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_bytebuddy_byte_buddy_1_10_22.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_bytebuddy_byte_buddy_agent_1_10_22.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_minidev_accessors_smart_2_4_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_minidev_json_smart_2_4_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_logging_log4j_log4j_api_2_17_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_logging_log4j_log4j_to_slf4j_2_17_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_core_9_0_56.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_el_9_0_56.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_websocket_9_0_56.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apiguardian_apiguardian_api_1_1_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_assertj_assertj_core_3_19_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_atteo_evo_inflector_1_2_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_dom4j_dom4j_2_1_3.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_glassfish_jaxb_jaxb_runtime_2_3_5.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_glassfish_jaxb_txw2_2_3_5.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_hibernate_core_5_4_33.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_validator_hibernate_validator_6_2_0_Final.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_javassist_javassist_3_27_0_GA.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_jboss_jandex_2_2_3_Final.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_jboss_logging_jboss_logging_3_4_2_Final.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_5_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_api_5_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_engine_5_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_params_5_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_platform_junit_platform_commons_1_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_platform_junit_platform_engine_1_7_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_mockito_mockito_core_3_9_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_mockito_mockito_junit_jupiter_3_9_0.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_postgresql_postgresql_42_2_24.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_jul_to_slf4j_1_7_32.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_slf4j_api_1_7_32.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_autoconfigure_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_devtools_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_aop_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_data_jpa_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_data_rest_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_jdbc_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_json_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_logging_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_security_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_test_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_tomcat_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_validation_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_web_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_test_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_test_autoconfigure_2_5_8.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_commons_2_5_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_jpa_2_5_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_rest_core_3_5_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_rest_webmvc_3_5_7.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_hateoas_spring_hateoas_1_3_6.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_security_spring_security_config_5_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_security_spring_security_core_5_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_security_spring_security_crypto_5_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_security_spring_security_test_5_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_security_spring_security_web_5_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_session_spring_session_core_2_5_4.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_aop_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_aspects_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_beans_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_context_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_core_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_expression_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_jcl_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_jdbc_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_orm_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_test_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_tx_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_web_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_webmvc_5_3_14.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_yaml_snakeyaml_1_28.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/controllers/ActivityController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/controllers/ActivityController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/data/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/data/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/service/microsoft/MicrosoftService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/workhuservice/service/microsoft/MicrosoftService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/imports/docs/munkalap_sablon_uj.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/imports/docs/munkalap_sablon_uj.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/WorkHuServiceApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/WorkHuServiceApplication.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/RestConfiguration.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/RestConfiguration.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/SeasonController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/SeasonController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/TeamsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/TeamsController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/TransactionsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/TransactionsController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/controllers/UserController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/BaseEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/BaseEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Season$Fields.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Season$Fields.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Season.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Season.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Transaction$Fields.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Transaction$Fields.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Transaction.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/Transaction.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/User$Fields.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/User$Fields.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/data/User.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/Account.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/Account.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/Role.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/Role.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/TransactionType.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/enums/TransactionType.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/SeasonRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/SeasonRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/TransactionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/TransactionRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/UserRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/repositories/UserRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/SecurityUtils.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/SecurityUtils.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuDetailsManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuDetailsManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuSecurityConfig$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuSecurityConfig$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuSecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/security/WorkHuSecurityConfig.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/SeasonService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/SeasonService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/TeamService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/TeamService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/TransactionService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/TransactionService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/UserImportService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/UserImportService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/ktk/workhuservice/service/UserService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/imports/myshare/Pmo_lista.csv" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/imports/myshare/Pmo_lista.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/ktk/workhuservice/WorkHuServiceApplicationTests.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/work-hu-service.iml" beforeDir="false" afterPath="$PROJECT_DIR$/work-hu-service.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workhudb.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/workhudb.mv.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workhudb.trace.db" beforeDir="false" afterPath="$PROJECT_DIR$/workhudb.trace.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/config/EnumCheckConstraintCleanup.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/config/EnumCheckConstraintCleanup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/TransactionItemsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/TransactionItemsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/auditlog/AuditEntityListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/auditlog/AuditEntityListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/Permission.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/Permission.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/NotificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -143,6 +31,12 @@
   </component>
   <component name="CompilerWorkspaceConfiguration">
     <option name="PARALLEL_COMPILATION" value="true" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="8df769c8-d356-4a44-95e4-b011e6702891" value="" />
+      <entry key="9adb5f79-06eb-4bb9-b5d7-3b67f47f7355" value="" />
+    </colors>
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -205,42 +99,69 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="user-permissions" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;WJavaHunt3r&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/WJavaHunt3r/dukapp-service.git&quot;,
+    &quot;accountId&quot;: &quot;6feb263b-b756-4c41-936e-cd2ab539963d&quot;
+  }
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
         <option name="alwaysUpdateSnapshots" value="true" />
-        <option name="mavenHome" value="$USER_HOME$/Documents/maven" />
+        <option name="customMavenHome" value="$USER_HOME$/Documents/maven" />
+        <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
         <option name="printErrorStackTraces" value="true" />
-        <option name="usePluginRegistry" value="true" />
-        <option name="userSettingsFile" value="C:\Users\awagner\Documents\maven\conf\settings.xml" />
       </MavenGeneralSettings>
     </option>
-    <option name="importingSettings">
-      <MavenImportingSettings>
-        <option name="importAutomatically" value="true" />
-      </MavenImportingSettings>
-    </option>
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="2VTFnGR0LD87Z556h2T91Vp3uWc" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
-  <component name="PropertiesComponent">
-    <property name="DatabaseDriversLRU" value="h2&#10;postgresql" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/resources/imports/docs" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="Global Libraries" />
-    <property name="project.structure.proportion" value="0.15" />
-    <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
   </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.dukapp-service [clean].executor": "Run",
+    "Maven.dukapp-service [install].executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.WorkHuServiceApplication.executor": "Debug",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "push-notifications",
+    "kotlin-language-version-configured": "true",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.keymap"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\workspace\private\work-hu-service\src\main\resources\imports\docs" />
@@ -252,19 +173,7 @@
       <command value="mvn -v" />
     </option>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager" selected="Application.Unnamed">
+  <component name="RunManager" selected="Spring Boot.WorkHuServiceApplication">
     <configuration name="Unnamed" type="Application" factoryName="Application" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.ktk.workhuservice.WorkHuServiceApplication" />
       <module name="work-hu-service" />
@@ -273,8 +182,13 @@
       </method>
     </configuration>
     <configuration name="WorkHuServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-      <module name="work-hu-service" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.ktk.workhuservice.WorkHuServiceApplication" />
+      <option name="ALTERNATIVE_JRE_PATH" value="temurin-21" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <envs>
+        <env name="FIREBASE_CREDENTIALS_FILE" value="$USER_HOME$/Downloads/dukapp-494509-firebase-adminsdk-fbsvc-7c1eb131d7.json" />
+      </envs>
+      <module name="dukapp-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.ktk.dukappservice.DukAppServiceApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -303,6 +217,14 @@
         </treeState>
       </serviceView>
     </option>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10968.63" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.10968.63" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -388,16 +310,14 @@
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
@@ -407,10 +327,15 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Formázás" />
-    <MESSAGE value="Spouses" />
     <MESSAGE value="Mentor mentees" />
     <MESSAGE value="User email and phone number" />
     <MESSAGE value="Send activities to teams" />
-    <option name="LAST_COMMIT_MESSAGE" value="Send activities to teams" />
+    <MESSAGE value="Spouses" />
+    <MESSAGE value="Havi OnTrack lokal" />
+    <option name="LAST_COMMIT_MESSAGE" value="Havi OnTrack lokal" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

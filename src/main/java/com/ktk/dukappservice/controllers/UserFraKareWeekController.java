@@ -4,9 +4,13 @@ import com.ktk.dukappservice.data.userfrakarestreak.UserFraKareWeek;
 import com.ktk.dukappservice.data.userfrakarestreak.UserFraKareWeekService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
+import com.ktk.dukappservice.enums.Permission;
 import com.ktk.dukappservice.mapper.FraKareStreakMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -43,26 +47,22 @@ public class UserFraKareWeekController {
     }
 
     @PutMapping("/{id}/setListened")
-    public ResponseEntity setUserFraKareWeekListened(@RequestParam("listened") boolean listened, @PathVariable Long id) {
+    public ResponseEntity setUserFraKareWeekListened(@RequestParam("listened") boolean listened, @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.getCurrentUser(userDetails);
         Optional<UserFraKareWeek> fraKareStreak = userFraKareWeekService.findById(id);
         if (fraKareStreak.isEmpty()) {
             return ResponseEntity.status(400).body("Invalid fraKareStreakId");
+        }
+        if (!fraKareStreak.get().getUser().getId().equals(currentUser.getId()) && !currentUser.hasPermission(Permission.FRAKARE_MANAGE)) {
+            return ResponseEntity.status(403).body("Permission denied!");
         }
 
         return ResponseEntity.status(200).body(fraKareStreakMapper.entityToDto(userFraKareWeekService.setListened(fraKareStreak.get(), listened)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUserFraKareWeek(@PathVariable Long id, @RequestParam("userId") Long userId) {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(400).body("No user with id:" + userId);
-        }
-
-        if (!user.get().isAdmin() && !user.get().isTeamLeader()) {
-            return ResponseEntity.status(401).body("Permission denied");
-        }
-
+    @PreAuthorize("hasAuthority('FRAKARE_MANAGE')")
+    public ResponseEntity<?> deleteUserFraKareWeek(@PathVariable Long id) {
         Optional<UserFraKareWeek> item = userFraKareWeekService.findById(id);
         if (item.isPresent()) {
             userFraKareWeekService.deleteById(id);
