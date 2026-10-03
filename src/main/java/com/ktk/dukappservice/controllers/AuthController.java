@@ -126,6 +126,7 @@ public class AuthController {
         user.setChangedPassword(true);
         user.setFirstname(registerDto.getFirstname());
         user.setLastname(registerDto.getLastname());
+        user.setGender(registerDto.getGender());
 
         userService.save(user);
         auditLogService.recordAs(user.getUsername(), AuditAction.REGISTER, "User", user.getId(), Map.of("method", "password"));

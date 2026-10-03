@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -222,6 +224,105 @@ public class JobService extends BaseService<Job, Long> {
         return save(job);
     }
 
+    /** Upper bound for one repeating job, so a typo in the end date can't create thousands of jobs. */
+    static final int MAX_SERIES_JOBS = 60;
+
+    /**
+     * Creates the job and, when {@code repeatUntil} is given, a copy for every later date up to it (inclusive) whose
+     * weekday is in {@code daysOfWeek} (empty = the weekday of the job's own date). Every occurrence keeps the time
+     * of day and duration, and its registration and cancellation deadlines keep their distance to the start. All
+     * occurrences share a series id. Returns them in date order; the first is {@code template} itself.
+     */
+    @Transactional
+    public List<Job> createSeries(Job template, Set<DayOfWeek> daysOfWeek, LocalDate repeatUntil) {
+        if (repeatUntil == null) {
+            return List.of(create(template));
+        }
+        LocalDate firstDate = template.getJobDateTime().toLocalDate();
+        if (repeatUntil.isBefore(firstDate)) {
+            throw badRequest("The repeat end date can't be before the job date.");
+        }
+        Set<DayOfWeek> days = daysOfWeek == null || daysOfWeek.isEmpty() ? Set.of(firstDate.getDayOfWeek()) : daysOfWeek;
+        List<LocalDate> dates = new ArrayList<>();
+        for (LocalDate date = firstDate; !date.isAfter(repeatUntil); date = date.plusDays(1)) {
+            if (days.contains(date.getDayOfWeek())) {
+                dates.add(date);
+            }
+            if (dates.size() > MAX_SERIES_JOBS) {
+                throw badRequest("A repeating job can have at most " + MAX_SERIES_JOBS + " occurrences, shorten the period.");
+            }
+        }
+        if (dates.isEmpty()) {
+            throw badRequest("None of the selected weekdays falls between the job date and the repeat end date.");
+        }
+
+        String seriesId = UUID.randomUUID().toString();
+        template.setSeriesId(seriesId);
+        List<Job> created = new ArrayList<>();
+        for (LocalDate date : dates) {
+            Job occurrence = date.equals(firstDate) ? template : copyOnto(template, date);
+            created.add(create(occurrence));
+        }
+        return created;
+    }
+
+    /** A copy of {@code template} moved to {@code date}; times and deadlines keep their distance to the start. */
+    private static Job copyOnto(Job template, LocalDate date) {
+        Duration shift = Duration.between(template.getJobDateTime().toLocalDate().atStartOfDay(), date.atStartOfDay());
+        Job copy = new Job();
+        copy.setSeriesId(template.getSeriesId());
+        copy.setCreateUser(template.getCreateUser());
+        copy.setEmployer(template.getEmployer());
+        copy.setResponsible(template.getResponsible());
+        copy.setDescription(template.getDescription());
+        copy.setAccount(template.getAccount());
+        copy.setTransactionType(template.getTransactionType());
+        copy.setJobDateTime(template.getJobDateTime().plus(shift));
+        copy.setJobEndDateTime(template.getJobEndDateTime() == null ? null : template.getJobEndDateTime().plus(shift));
+        copy.setRegistrationOpensAt(template.getRegistrationOpensAt() == null ? null : template.getRegistrationOpensAt().plus(shift));
+        // Only the first job of a series announces itself, see createSeries
+        copy.setSendNotification(false);
+        copy.setRegistrationDeadline(template.getRegistrationDeadline() == null ? null : template.getRegistrationDeadline().plus(shift));
+        copy.setCancellationDeadline(template.getCancellationDeadline() == null ? null : template.getCancellationDeadline().plus(shift));
+        copy.setCancellationAllowed(template.isCancellationAllowed());
+        copy.setRegistrationClosed(template.isRegistrationClosed());
+        copy.setMaxParticipants(template.getMaxParticipants());
+        copy.setWaitlistEnabled(template.isWaitlistEnabled());
+        copy.setMinAge(template.getMinAge());
+        copy.setMaxAge(template.getMaxAge());
+        copy.setGenderRestriction(template.getGenderRestriction());
+        return copy;
+    }
+
+    /** Open jobs whose "new job" notification should go out now. */
+    public List<Job> findDueAnnouncements(LocalDateTime now) {
+        return repository.findDueAnnouncements(JobStatus.OPEN, now);
+    }
+
+    /** Records that the notification was sent, so it is never sent twice. */
+    @Transactional
+    public void markAnnounced(Long jobId) {
+        Job job = lock(jobId);
+        job.setAnnouncedDateTime(LocalDateTime.now());
+        save(job);
+    }
+
+    /** Cancels every still open occurrence of the series that hasn't started yet; returns the cancelled jobs. */
+    @Transactional
+    public List<Job> cancelSeries(String seriesId, User actor) {
+        List<Job> cancelled = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (Job job : repository.findBySeriesIdAndStatus(seriesId, JobStatus.OPEN)) {
+            if (job.getJobDateTime().isAfter(now)) {
+                cancelled.add(cancelJob(job.getId(), actor));
+            }
+        }
+        if (cancelled.isEmpty() && repository.findBySeriesIdAndStatus(seriesId, JobStatus.OPEN).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No open jobs in this series.");
+        }
+        return cancelled;
+    }
+
     /**
      * Applies {@code applyChanges} to the job under the row lock. The number of places can't drop below the number of
      * registered users; raising it promotes waitlisted users. Existing registrations are never evicted when the age or
@@ -267,8 +368,14 @@ public class JobService extends BaseService<Job, Long> {
         requireCanActFor(actor, target);
         requireOpen(job);
         LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(job.getRegistrationDeadline())) {
+        if (job.isRegistrationClosed()) {
+            throw conflict("Registration is closed.");
+        }
+        if (job.getRegistrationDeadline() != null && now.isAfter(job.getRegistrationDeadline())) {
             throw conflict("The registration deadline has passed.");
+        }
+        if (job.getRegistrationOpensAt() != null && now.isBefore(job.getRegistrationOpensAt())) {
+            throw conflict("Registration opens on " + job.getRegistrationOpensAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ".");
         }
         checkEligibility(job, target);
 
@@ -320,8 +427,13 @@ public class JobService extends BaseService<Job, Long> {
         JobRegistration registration = findActiveRegistration(jobId, target);
         LocalDateTime now = LocalDateTime.now();
         boolean heldPlace = registration.getStatus() == REGISTERED;
-        if (heldPlace && now.isAfter(job.getCancellationDeadline()) && !actor.hasPermission(Permission.JOB_MANAGE_ALL)) {
-            throw conflict("The cancellation deadline has passed. Contact the responsible user.");
+        if (heldPlace && !actor.hasPermission(Permission.JOB_MANAGE_ALL)) {
+            if (!job.isCancellationAllowed()) {
+                throw conflict("Cancelling is not allowed for this job. Contact the responsible user.");
+            }
+            if (job.getCancellationDeadline() != null && now.isAfter(job.getCancellationDeadline())) {
+                throw conflict("The cancellation deadline has passed. Contact the responsible user.");
+            }
         }
         registration.setStatus(CANCELLED);
         registration.setCancelledDateTime(now);
@@ -460,11 +572,16 @@ public class JobService extends BaseService<Job, Long> {
         if (job.getJobEndDateTime() != null && !job.getJobEndDateTime().isAfter(date)) {
             throw badRequest("The job must end after it starts.");
         }
-        if (job.getRegistrationDeadline().isAfter(date)) {
+        if (job.getRegistrationDeadline() != null && job.getRegistrationDeadline().isAfter(date)) {
             throw badRequest("The registration deadline must not be after the job date.");
         }
-        if (job.getCancellationDeadline().isAfter(date)) {
-            throw badRequest("The cancellation deadline must not be after the job date.");
+        if (job.getRegistrationOpensAt() != null && job.getRegistrationDeadline() != null
+                && job.getRegistrationOpensAt().isAfter(job.getRegistrationDeadline())) {
+            throw badRequest("Registration must open before the registration deadline.");
+        }
+        LocalDateTime cancellationLimit = job.getJobEndDateTime() != null ? job.getJobEndDateTime() : date;
+        if (job.getCancellationDeadline() != null && job.getCancellationDeadline().isAfter(cancellationLimit)) {
+            throw badRequest("The cancellation deadline must not be after the end of the job.");
         }
         if (job.getMaxParticipants() != null && job.getMaxParticipants() < 1) {
             throw badRequest("The number of places must be at least 1.");

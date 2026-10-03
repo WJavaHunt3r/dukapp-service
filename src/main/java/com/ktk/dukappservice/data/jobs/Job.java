@@ -74,16 +74,39 @@ public class Job extends BaseEntity<Job, Long> {
     @NotNull
     private TransactionType transactionType;
 
+    /** Null = no deadline. */
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     @Column(name = "REGISTRATION_DEADLINE")
-    @NotNull
     private LocalDateTime registrationDeadline;
 
-    /** Until then registered users (or their parents) can cancel on their own. */
+    /** Until then registered users (or their parents) can cancel on their own. Null = no deadline. */
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     @Column(name = "CANCELLATION_DEADLINE")
-    @NotNull
     private LocalDateTime cancellationDeadline;
+
+    /** False: registered users can't cancel on their own at all (only {@code JOB_MANAGE_ALL}). */
+    @Column(name = "CANCELLATION_ALLOWED", columnDefinition = "boolean default true")
+    private boolean cancellationAllowed = true;
+
+    /** True: nobody can register until the job is opened again, whatever the opening time and deadline say. */
+    @Column(name = "REGISTRATION_CLOSED", columnDefinition = "boolean default false")
+    private boolean registrationClosed;
+
+    /** Registration opens at this time; null means it is open from the moment the job is created. */
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
+    @Column(name = "REGISTRATION_OPENS_AT")
+    private LocalDateTime registrationOpensAt;
+
+    /**
+     * Whether users are told about the job with a push notification, sent when registration opens (right away
+     * without {@link #registrationOpensAt}). Rows from before this existed are false, so they are never announced.
+     */
+    @Column(name = "SEND_NOTIFICATION", columnDefinition = "boolean default false")
+    private boolean sendNotification;
+
+    /** When the "new job" notification went out; null while it is still due. */
+    @Column(name = "ANNOUNCED_DATE_TIME")
+    private LocalDateTime announcedDateTime;
 
     /** Number of places; null means unlimited. */
     @Column(name = "MAX_PARTICIPANTS")
@@ -105,6 +128,10 @@ public class Job extends BaseEntity<Job, Long> {
     @Column(name = "GENDER_RESTRICTION", length = 10)
     @Enumerated(EnumType.STRING)
     private Gender genderRestriction;
+
+    /** Shared by the occurrences of a repeating job; null for a single job. */
+    @Column(name = "SERIES_ID", length = 36)
+    private String seriesId;
 
     @Column(name = "STATUS", length = 20)
     @Enumerated(EnumType.STRING)

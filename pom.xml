@@ -150,6 +150,11 @@
             <artifactId>firebase-admin</artifactId>
             <version>9.9.0</version>
         </dependency>
+        <!-- Used directly (GoogleCredentials in FirebaseFcmClient); version from google-auth-library-bom -->
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
