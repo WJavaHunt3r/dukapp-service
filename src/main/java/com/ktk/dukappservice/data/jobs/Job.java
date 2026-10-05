@@ -143,6 +143,14 @@ public class Job extends BaseEntity<Job, Long> {
     @NotNull
     private JobStatus status = JobStatus.OPEN;
 
+    /** When the first reminder ("the job is over, close it") went to the responsible user; null while not sent. */
+    @Column(name = "CLOSE_REMINDER_SENT")
+    private LocalDateTime closeReminderSentDateTime;
+
+    /** When the second reminder (the day after) went out; null while not sent. */
+    @Column(name = "CLOSE_REMINDER_2_SENT")
+    private LocalDateTime closeReminder2SentDateTime;
+
     /** The activity created when the job was completed. */
     @JoinColumn(name = "ACTIVITY")
     @ManyToOne

@@ -11,6 +11,8 @@ public enum AuditAction {
     LOGIN_FAILED,
     LOGOUT,
     REGISTER,
+    /** A user asked for their account and data to be deleted (an admin gets an e-mail). */
+    ACCOUNT_DELETION_REQUEST,
     PASSWORD_CHANGE,
     PASSWORD_RESET,
     /** A new random password was e-mailed to the user. */

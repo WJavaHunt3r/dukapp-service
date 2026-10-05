@@ -769,4 +769,17 @@ class JobServiceTest {
         assertThat(statusOf(() -> service.complete(1L, organizer,
                 List.of(new JobService.HoursEntry(10L, 2, null), new JobService.HoursEntry(99L, 1, null))))).isEqualTo(400);
     }
+
+    @Test
+    void spousesCanRegisterEachOtherInEitherDirectionButNotStrangers() {
+        User a = adult(10), b = adult(11), stranger = adult(12);
+        a.setSpouseId(11L);
+
+        assertThat(service.canActFor(a, b)).isTrue();
+        assertThat(service.canActFor(b, a)).isTrue();
+        assertThat(service.canActFor(stranger, a)).isFalse();
+
+        assertThat(service.register(1L, b, a, null).getStatus()).isEqualTo(JobRegistrationStatus.REGISTERED);
+        assertThat(service.cancelRegistration(1L, b, a).getStatus()).isEqualTo(JobRegistrationStatus.CANCELLED);
+    }
 }

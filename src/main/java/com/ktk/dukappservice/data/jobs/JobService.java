@@ -74,7 +74,7 @@ public class JobService extends BaseService<Job, Long> {
 
     // ---------------------------------------------------------------- queries
 
-    public Page<Job> fetchByQuery(JobStatus status, Long responsibleId, Long registeredUserId, boolean openOnly,
+    public Page<Job> fetchByQuery(JobStatus status, Long responsibleId, Long employerId, Long registeredUserId, boolean openOnly,
                                   LocalDate dateFrom, LocalDate dateTo, String searchText, Pageable pageable) {
         Specification<Job> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -84,9 +84,14 @@ public class JobService extends BaseService<Job, Long> {
             if (responsibleId != null) {
                 predicates.add(cb.equal(root.get(Job.Fields.responsible).get("id"), responsibleId));
             }
+            if (employerId != null) {
+                predicates.add(cb.equal(root.get(Job.Fields.employer).get("id"), employerId));
+            }
             if (openOnly) {
+                // Still takes registrations (maybe from a later opening time on): open, and no deadline or one in the future
                 predicates.add(cb.equal(root.get(Job.Fields.status), JobStatus.OPEN));
-                predicates.add(cb.greaterThan(root.<LocalDateTime>get(Job.Fields.registrationDeadline), LocalDateTime.now()));
+                predicates.add(cb.or(cb.isNull(root.get(Job.Fields.registrationDeadline)),
+                        cb.greaterThan(root.<LocalDateTime>get(Job.Fields.registrationDeadline), LocalDateTime.now())));
             }
             if (dateFrom != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.<LocalDateTime>get(Job.Fields.jobDateTime), dateFrom.atStartOfDay()));
@@ -166,11 +171,20 @@ public class JobService extends BaseService<Job, Long> {
                 || job.getCreateUser().getId().equals(actor.getId());
     }
 
-    /** Yourself, your child (same familyId, you are an adult and they are not), or anyone with JOB_MANAGE_ALL. */
+    /**
+     * Yourself, your spouse, your child (same familyId, you are an adult and they are not), or anyone with
+     * JOB_MANAGE_ALL.
+     */
     public boolean canActFor(User actor, User target) {
         return actor.getId().equals(target.getId())
                 || actor.hasPermission(Permission.JOB_MANAGE_ALL)
+                || isSpouseOf(actor, target)
                 || isParentOf(actor, target);
+    }
+
+    /** Either of the two names the other as spouse, so it works whichever record was filled in. */
+    public static boolean isSpouseOf(User user, User other) {
+        return user.getId().equals(other.getSpouseId()) || other.getId().equals(user.getSpouseId());
     }
 
     public static boolean isParentOf(User parent, User child) {
@@ -312,6 +326,28 @@ public class JobService extends BaseService<Job, Long> {
             }
             save(job);
         }
+    }
+
+    /** When the job is over: its end, or its start for jobs without an end time. */
+    public static LocalDateTime endOf(Job job) {
+        return job.getJobEndDateTime() != null ? job.getJobEndDateTime() : job.getJobDateTime();
+    }
+
+    /** Open jobs that are over (ended at or before {@code endBefore}) and still wait for their hours. */
+    public List<Job> findOverdueOpenJobs(LocalDateTime endBefore) {
+        return repository.findOverdueOpen(JobStatus.OPEN, endBefore);
+    }
+
+    /** Records a close reminder as sent ({@code second} = the one on the next day), so it is never sent twice. */
+    @Transactional
+    public void markCloseReminderSent(Long jobId, boolean second) {
+        Job job = lock(jobId);
+        if (second) {
+            job.setCloseReminder2SentDateTime(LocalDateTime.now());
+        } else {
+            job.setCloseReminderSentDateTime(LocalDateTime.now());
+        }
+        save(job);
     }
 
     /** Open jobs whose "new job" notification should go out now. */
@@ -596,7 +632,7 @@ public class JobService extends BaseService<Job, Long> {
 
     private void requireCanActFor(User actor, User target) {
         if (!canActFor(actor, target)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only do this for yourself or your children.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only do this for yourself, your spouse or your children.");
         }
     }
 

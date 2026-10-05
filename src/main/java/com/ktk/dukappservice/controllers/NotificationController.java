@@ -8,6 +8,8 @@ import com.ktk.dukappservice.dto.DeviceTokenDto;
 import com.ktk.dukappservice.dto.GeneralNotificationDto;
 import com.ktk.dukappservice.dto.NotificationPreferenceDto;
 import com.ktk.dukappservice.dto.NotificationScheduleDto;
+import com.ktk.dukappservice.dto.OverdueJobsDto;
+import com.ktk.dukappservice.dto.OverdueRemindDto;
 import com.ktk.dukappservice.enums.NotificationType;
 import com.ktk.dukappservice.service.notifications.PushNotificationService;
 import jakarta.validation.Valid;
@@ -96,6 +98,26 @@ public class NotificationController {
         }
         User sender = userService.getCurrentUser(userDetails);
         return ResponseEntity.ok(toDto(pushNotificationService.sendGeneral(dto.getTitle().trim(), dto.getBody().trim(), roleIds, sender)));
+    }
+
+    // ---------------------------------------------------------------- jobs that were not closed
+
+    /** Users who are responsible for jobs that are over but still wait for their hours. */
+    @GetMapping("/overdue-jobs")
+    @PreAuthorize("hasAuthority('NOTIFICATION_SEND')")
+    public ResponseEntity<?> getOverdueJobs() {
+        List<OverdueJobsDto> result = new ArrayList<>();
+        pushNotificationService.overdueJobsByResponsible().forEach((user, jobs) -> result.add(new OverdueJobsDto(
+                user.getId(), user.getFullName(),
+                jobs.stream().map(j -> new OverdueJobsDto.Job(j.getId(), j.getDescription(), j.getJobDateTime(), j.getJobEndDateTime())).toList())));
+        return ResponseEntity.ok(result);
+    }
+
+    /** Sends the "close your job" notification to the given users (empty = all who have unclosed jobs). */
+    @PostMapping("/overdue-jobs/remind")
+    @PreAuthorize("hasAuthority('NOTIFICATION_SEND')")
+    public ResponseEntity<?> remindOverdue(@RequestBody OverdueRemindDto body) {
+        return ResponseEntity.ok(pushNotificationService.remindOverdue(body.getUserIds() == null ? Set.of() : body.getUserIds()));
     }
 
     // ---------------------------------------------------------------- weekly schedules (push + on-track e-mail)

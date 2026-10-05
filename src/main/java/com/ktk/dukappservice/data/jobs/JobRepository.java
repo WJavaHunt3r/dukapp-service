@@ -31,6 +31,10 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
             "AND (j.registrationOpensAt IS NULL OR j.registrationOpensAt <= ?2)")
     List<Job> findDueAnnouncements(JobStatus status, java.time.LocalDateTime now);
 
+    /** Open jobs that ended at or before {@code endBefore} (the end time, or the start when there is none). */
+    @Query("SELECT j FROM Job j WHERE j.status = ?1 AND COALESCE(j.jobEndDateTime, j.jobDateTime) <= ?2 ORDER BY j.jobDateTime")
+    List<Job> findOverdueOpen(JobStatus status, java.time.LocalDateTime endBefore);
+
     List<Job> findByActivityId(Long activityId);
 
     List<Job> findBySeriesIdAndStatus(String seriesId, JobStatus status);

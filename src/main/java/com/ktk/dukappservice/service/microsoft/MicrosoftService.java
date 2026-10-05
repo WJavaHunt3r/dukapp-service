@@ -232,6 +232,26 @@ public class MicrosoftService {
         sendEmail(content, user.getEmail(), "Új jelszó", new ArrayList<Attachment>());
     }
 
+    /** Tells an admin that {@code user} asked to have their account and all their data deleted. */
+    public void sendAccountDeletionRequest(User user, String adminEmail) throws Exception {
+        String content = String.format("""
+                <p>A DukApp user asked for their account and all data related to it to be deleted.</p>
+                <ul>
+                  <li>Name: %s</li>
+                  <li>Username: %s</li>
+                  <li>E-mail: %s</li>
+                  <li>User id: %d</li>
+                </ul>
+                <p>Please delete the account and everything related to it (activities, transactions, registrations, messages,
+                notification tokens) and confirm to the user by e-mail.</p>
+                """, esc(user.getFullName()), esc(user.getUsername()), esc(user.getEmail()), user.getId());
+        sendEmail(content, adminEmail, "DukApp: account deletion request", new ArrayList<Attachment>());
+    }
+
+    private static String esc(String text) {
+        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     private void sendEmail(String content, String email, String subject, ArrayList<Attachment> attachmentList) throws Exception {
         GraphServiceClient graphClient = getGraphClient();
 

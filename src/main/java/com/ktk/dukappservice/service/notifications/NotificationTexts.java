@@ -39,6 +39,24 @@ final class NotificationTexts {
         return new Text("Új tranzakciók", descriptions.size() + " új tranzakció került rögzítésre.");
     }
 
+    static Text chatMessage(Job job, User sender, String message) {
+        String body = sender.getFullName() + ": " + message.replaceAll("\\s+", " ");
+        return new Text(truncate(job.getDescription()), body.length() <= 140 ? body : body.substring(0, 139) + "…");
+    }
+
+    static Text jobNotClosed(Job job, boolean reminder) {
+        return reminder
+                ? new Text("Emlékeztető: lezáratlan munka", "Még mindig nincs lezárva: " + describe(job))
+                : new Text("Zárd le a munkát", "Lejárt, de még nem adtad meg az órákat: " + describe(job));
+    }
+
+    static Text jobsNotClosed(List<Job> jobs) {
+        if (jobs.size() == 1) {
+            return new Text("Lezáratlan munka", "Még nincsenek megadva az órák: " + describe(jobs.getFirst()));
+        }
+        return new Text("Lezáratlan munkák", jobs.size() + " munkád vár lezárásra, add meg az órákat.");
+    }
+
     private static String describe(Job job) {
         return truncate(job.getDescription()) + " (" + DATE.format(job.getJobDateTime()) + ")";
     }

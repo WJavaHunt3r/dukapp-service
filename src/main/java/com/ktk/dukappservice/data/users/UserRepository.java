@@ -25,6 +25,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByMyShareID(Long id);
 
+    /** The highest MyShare id within the range, null when there is none. */
+    @Query("SELECT MAX(u.myShareID) FROM User u WHERE u.myShareID BETWEEN ?1 AND ?2")
+    Long findMaxMyShareIdBetween(Long from, Long to);
+
     Iterable<User> findAllByRole(Role role);
 
     @Query("SELECT u.id FROM User u WHERE u.username = ?1 OR u.email = ?1")

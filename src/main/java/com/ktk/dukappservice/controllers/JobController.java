@@ -67,6 +67,7 @@ public class JobController {
     @GetMapping()
     public ResponseEntity<?> getJobs(@RequestParam(value = "status", required = false) JobStatus status,
                                      @RequestParam(value = "responsibleId", required = false) Long responsibleId,
+                                     @RequestParam(value = "employerId", required = false) Long employerId,
                                      @RequestParam(value = "registeredUserId", required = false) Long registeredUserId,
                                      @RequestParam(value = "openOnly", required = false, defaultValue = "false") boolean openOnly,
                                      @RequestParam(value = "dateFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -75,7 +76,7 @@ public class JobController {
                                      @AuthenticationPrincipal UserDetails userDetails,
                                      @PageableDefault(sort = "jobDateTime") Pageable pageable) {
         User user = userService.getCurrentUser(userDetails);
-        Page<Job> jobs = jobService.fetchByQuery(status, responsibleId, registeredUserId, openOnly, dateFrom, dateTo, searchText, pageable);
+        Page<Job> jobs = jobService.fetchByQuery(status, responsibleId, employerId, registeredUserId, openOnly, dateFrom, dateTo, searchText, pageable);
         List<Long> ids = jobs.getContent().stream().map(Job::getId).toList();
         Map<Long, JobCounts> counts = jobService.countsFor(ids);
         Map<Long, JobRegistrationStatus> mine = jobService.statusesForUser(ids, user.getId());

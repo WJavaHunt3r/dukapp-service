@@ -30,12 +30,13 @@ class PushNotificationServiceTest {
     private final DeviceTokenRepository devices = mock(DeviceTokenRepository.class);
     private final GeneralNotificationRepository history = mock(GeneralNotificationRepository.class);
     private final JobService jobService = mock(JobService.class);
+    private final com.ktk.dukappservice.data.jobchat.JobChatService jobChatService = mock(com.ktk.dukappservice.data.jobchat.JobChatService.class);
     private PushNotificationService service;
     private Job job;
 
     @BeforeEach
     void setUp() {
-        service = new PushNotificationService(pushService, devices, history, jobService, MoreExecutors.newDirectExecutorService());
+        service = new PushNotificationService(pushService, devices, history, jobService, jobChatService, MoreExecutors.newDirectExecutorService());
         ReflectionTestUtils.setField(service, "baseChurchId", 1L);
         job = new Job();
         job.setId(5L);
@@ -130,5 +131,55 @@ class PushNotificationServiceTest {
         user.setLastname(lastname);
         user.setFirstname(firstname);
         return user;
+    }
+
+    // ---------------------------------------------------------------- unclosed jobs
+
+    private Job overdueJob(LocalDateTime end) {
+        Job j = new Job();
+        j.setId(7L);
+        j.setDescription("Kerti munka");
+        j.setJobDateTime(end.minusHours(2));
+        j.setJobEndDateTime(end);
+        com.ktk.dukappservice.data.users.User responsible = new com.ktk.dukappservice.data.users.User();
+        responsible.setId(2L);
+        j.setResponsible(responsible);
+        return j;
+    }
+
+    @Test
+    void theFirstReminderGoesOutAnHourAfterTheEndAndOnlyOnce() {
+        Job j = overdueJob(LocalDateTime.now().minusMinutes(90));
+        when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(j));
+        when(devices.findForUsers(eq(List.of(2L)), eq(NotificationType.JOB_NOT_CLOSED))).thenReturn(List.of());
+
+        service.sendCloseReminders();
+
+        verify(jobService).markCloseReminderSent(7L, false);
+        verify(pushService).send(anyCollection(), eq(NotificationType.JOB_NOT_CLOSED), any(), any(), anyMap());
+
+        // already sent, and the next day hasn't come: nothing more
+        j.setCloseReminderSentDateTime(LocalDateTime.now());
+        clearInvocations(pushService, jobService);
+        when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(j));
+        service.sendCloseReminders();
+        verify(pushService, never()).send(anyCollection(), any(), any(), any(), anyMap());
+    }
+
+    @Test
+    void theSecondReminderGoesOutOnTheNextDayAndForgottenJobsAreIgnored() {
+        Job j = overdueJob(LocalDateTime.now().minusDays(2));
+        j.setCloseReminderSentDateTime(LocalDateTime.now().minusDays(2));
+        when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(j));
+        when(devices.findForUsers(anyCollection(), any())).thenReturn(List.of());
+
+        service.sendCloseReminders();
+        verify(jobService).markCloseReminderSent(7L, true);
+
+        clearInvocations(jobService);
+        Job old = overdueJob(LocalDateTime.now().minusDays(30));
+        when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(old));
+        service.sendCloseReminders();
+        verify(jobService, never()).markCloseReminderSent(anyLong(), anyBoolean());
     }
 }
