@@ -29,6 +29,10 @@ public class JobDto {
     @Size(max = 200)
     private String description;
 
+    /** Longer text with details about the job; optional. */
+    @Size(max = 4000)
+    private String comment;
+
     @NotNull
     private Long employerId;
 

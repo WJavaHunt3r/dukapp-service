@@ -80,6 +80,9 @@ public class DukAppSecurityConfig {
                 // Enforces that all requests must be stateless by default
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // The error page itself: unhandled exceptions are rendered there, and behind a login they
+                        // turned every server error into an empty 403
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()

@@ -31,6 +31,8 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
             "AND (j.registrationOpensAt IS NULL OR j.registrationOpensAt <= ?2)")
     List<Job> findDueAnnouncements(JobStatus status, java.time.LocalDateTime now);
 
+    List<Job> findByActivityId(Long activityId);
+
     List<Job> findBySeriesIdAndStatus(String seriesId, JobStatus status);
 
     @Override

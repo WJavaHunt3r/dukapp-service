@@ -45,6 +45,7 @@ class JobServiceTest {
     @Mock ActivityService activityService;
     @Mock ActivityItemService activityItemService;
     @Mock RoundService roundService;
+    @Mock com.ktk.dukappservice.data.users.UserService userService;
 
     private final List<JobRegistration> store = new ArrayList<>();
     private JobService service;
@@ -55,7 +56,7 @@ class JobServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new JobService(repository, registrations, activityService, activityItemService, roundService);
+        service = new JobService(repository, registrations, activityService, activityItemService, roundService, userService);
 
         when(registrations.findByJobAndUser(anyLong(), anyLong())).thenAnswer(i -> store.stream()
                 .filter(r -> r.getJob().getId().equals(i.getArgument(0)) && r.getUser().getId().equals(i.getArgument(1)))
@@ -725,5 +726,47 @@ class JobServiceTest {
         Job late = template(LocalDateTime.now().plusDays(5));
         late.setCancellationDeadline(late.getJobEndDateTime().plusMinutes(1));
         assertThat(statusOf(() -> service.create(late))).isEqualTo(400);
+    }
+
+    @Test
+    void releasingAnActivityReopensTheCompletedJob() {
+        job.setStatus(JobStatus.COMPLETED);
+        job.setActivity(new Activity());
+        job.setCompletedDateTime(LocalDateTime.now());
+        when(repository.findByActivityId(5L)).thenReturn(List.of(job));
+
+        service.releaseActivity(5L);
+
+        assertThat(job.getActivity()).isNull();
+        assertThat(job.getStatus()).isEqualTo(JobStatus.OPEN);
+        assertThat(job.getCompletedDateTime()).isNull();
+    }
+
+    @Test
+    void usersWhoWereNotRegisteredCanBeAddedWhenCompleting() {
+        User registered = adult(10), walkIn = adult(20);
+        service.register(1L, registered, registered, null);
+        job.setJobDateTime(LocalDateTime.now().minusHours(3));
+        when(roundService.findRoundByDate(any())).thenReturn(Optional.of(new Round()));
+        when(userService.findById(20L)).thenReturn(Optional.of(walkIn));
+        when(activityItemService.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.complete(1L, organizer, List.of(new JobService.HoursEntry(10L, 2, null), new JobService.HoursEntry(20L, 3, null)));
+
+        ArgumentCaptor<ActivityItem> items = ArgumentCaptor.forClass(ActivityItem.class);
+        verify(activityItemService, times(2)).save(items.capture());
+        assertThat(items.getAllValues()).extracting(i -> i.getUser().getId()).containsExactlyInAnyOrder(10L, 20L);
+    }
+
+    @Test
+    void anUnknownExtraUserIsRejected() {
+        User registered = adult(10);
+        service.register(1L, registered, registered, null);
+        job.setJobDateTime(LocalDateTime.now().minusHours(3));
+        when(roundService.findRoundByDate(any())).thenReturn(Optional.of(new Round()));
+        when(userService.findById(99L)).thenReturn(Optional.empty());
+
+        assertThat(statusOf(() -> service.complete(1L, organizer,
+                List.of(new JobService.HoursEntry(10L, 2, null), new JobService.HoursEntry(99L, 1, null))))).isEqualTo(400);
     }
 }

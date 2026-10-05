@@ -54,6 +54,11 @@ public class Job extends BaseEntity<Job, Long> {
     @NotEmpty
     private String description;
 
+    /** Longer free text from the creator (details, what to bring, ...). Optional. */
+    @Size(max = 4000)
+    @Column(name = "JOB_COMMENT", length = 4000)
+    private String comment;
+
     @JoinColumn(name = "EMPLOYER")
     @ManyToOne
     @NotNull

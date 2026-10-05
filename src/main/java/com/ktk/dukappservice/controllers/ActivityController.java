@@ -3,6 +3,7 @@ package com.ktk.dukappservice.controllers;
 import com.ktk.dukappservice.data.activity.Activity;
 import com.ktk.dukappservice.data.activity.ActivityService;
 import com.ktk.dukappservice.data.activityitems.ActivityItemService;
+import com.ktk.dukappservice.data.jobs.JobService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.ActivityDto;
@@ -30,13 +31,15 @@ public class ActivityController {
     private final ActivityMapper activityMapper;
     private final ActivityItemService activityItemService;
     private final MicrosoftService microsoftService;
+    private final JobService jobService;
 
-    public ActivityController(ActivityService activityService, UserService userService, ActivityMapper activityMapper, ActivityItemService activityItemService, MicrosoftService microsoftService) {
+    public ActivityController(ActivityService activityService, UserService userService, ActivityMapper activityMapper, ActivityItemService activityItemService, MicrosoftService microsoftService, JobService jobService) {
         this.activityService = activityService;
         this.userService = userService;
         this.activityMapper = activityMapper;
         this.activityItemService = activityItemService;
         this.microsoftService = microsoftService;
+        this.jobService = jobService;
     }
 
     @GetMapping()
@@ -104,12 +107,14 @@ public class ActivityController {
             if (item.get().isRegisteredInApp() || item.get().isRegisteredInMyShare()) {
                 return ResponseEntity.status(400).body("Activity already registered. Can't modify.");
             }
+            // A job completed into this activity goes back to open instead of blocking the delete
+            jobService.releaseActivity(id);
             activityItemService.deleteByActivityId(item.get().getId());
             activityService.deleteById(id);
             return ResponseEntity.status(200).body("Delete successful");
         }
 
-        return ResponseEntity.status(403).body("No activity item found with id:" + id);
+        return ResponseEntity.status(404).body("No activity found with id:" + id);
 
     }
 

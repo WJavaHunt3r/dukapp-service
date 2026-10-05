@@ -26,6 +26,7 @@ public class JobMapper implements BaseMapperInterface<Job, JobDto> {
         dto.setJobDateTime(job.getJobDateTime());
         dto.setJobEndDateTime(job.getJobEndDateTime());
         dto.setDescription(job.getDescription());
+        dto.setComment(job.getComment());
         dto.setEmployerId(job.getEmployer().getId());
         dto.setEmployerName(job.getEmployer().getFullName());
         dto.setResponsibleId(job.getResponsible().getId());
@@ -78,6 +79,7 @@ public class JobMapper implements BaseMapperInterface<Job, JobDto> {
         job.setJobDateTime(dto.getJobDateTime());
         job.setJobEndDateTime(dto.getJobEndDateTime());
         job.setDescription(dto.getDescription().trim());
+        job.setComment(dto.getComment() == null || dto.getComment().isBlank() ? null : dto.getComment().trim());
         job.setAccount(dto.getAccount());
         job.setTransactionType(dto.getTransactionType());
         job.setRegistrationOpensAt(dto.getRegistrationOpensAt());
