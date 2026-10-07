@@ -27,11 +27,13 @@ class JobChatServiceTest {
 
     private final JobChatMessageRepository messages = mock(JobChatMessageRepository.class);
     private final JobChatMuteRepository mutes = mock(JobChatMuteRepository.class);
+    private final JobChatMemberRepository memberRepository = mock(JobChatMemberRepository.class);
     private final JobService jobService = mock(JobService.class);
     private JobChatService service;
     private Job job;
     private User creator, responsible, registered, waitlisted, stranger, admin;
     private final List<JobChatMute> muteStore = new ArrayList<>();
+    private final List<JobChatMember> memberStore = new ArrayList<>();
 
     private static User user(long id, Permission... permissions) {
         User u = new User();
@@ -53,7 +55,7 @@ class JobChatServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new JobChatService(messages, mutes, jobService);
+        service = new JobChatService(messages, mutes, memberRepository, jobService);
         creator = user(1);
         responsible = user(2);
         registered = user(3);
@@ -67,6 +69,15 @@ class JobChatServiceTest {
         job.setStatus(JobStatus.OPEN);
         when(jobService.findActiveRegistrations(1L)).thenReturn(List.of(
                 registration(registered, JobRegistrationStatus.REGISTERED), registration(waitlisted, JobRegistrationStatus.WAITLISTED)));
+        when(memberRepository.save(any())).thenAnswer(i -> {
+            JobChatMember m = i.getArgument(0);
+            memberStore.add(m);
+            return m;
+        });
+        when(memberRepository.findByJobId(anyLong())).thenAnswer(i -> new ArrayList<>(memberStore));
+        when(memberRepository.findByJobIdAndUserId(anyLong(), anyLong())).thenAnswer(i -> memberStore.stream()
+                .filter(m -> m.getUser().getId().equals(i.getArgument(1))).findFirst());
+        doAnswer(i -> memberStore.remove((JobChatMember) i.getArgument(0))).when(memberRepository).delete(any(JobChatMember.class));
         when(messages.save(any())).thenAnswer(i -> i.getArgument(0));
         when(mutes.save(any())).thenAnswer(i -> {
             muteStore.add(i.getArgument(0));
@@ -119,5 +130,43 @@ class JobChatServiceTest {
 
         job.setStatus(JobStatus.CANCELLED);
         assertThat(JobChatService.isArchived(job)).isTrue();
+    }
+
+    @Test
+    void organisersCanAddAndRemovePeopleWhoAreNotRegistered() {
+        service.addMember(job, stranger, responsible);
+
+        assertThat(service.canAccess(stranger, job)).isTrue();
+        assertThat(service.recipientIds(job, 3L)).contains(5L);
+        assertThat(service.participants(job)).filteredOn(p -> p.user().getId() == 5L)
+                .singleElement().satisfies(p -> {
+                    assertThat(p.role()).isEqualTo("MEMBER");
+                    assertThat(p.removable()).isTrue();
+                });
+
+        service.removeMember(job, 5L, responsible);
+        assertThat(service.canAccess(stranger, job)).isFalse();
+    }
+
+    @Test
+    void onlyOrganisersManageMembersAndRegisteredPeopleCannotBeRemoved() {
+        assertThatThrownBy(() -> service.addMember(job, stranger, registered)).isInstanceOfSatisfying(ResponseStatusException.class,
+                e -> assertThat(e.getStatusCode().value()).isEqualTo(403));
+        assertThat(service.canManageMembers(admin, job)).isTrue();
+        assertThat(service.canManageMembers(creator, job)).isTrue();
+        assertThat(service.canManageMembers(registered, job)).isFalse();
+
+        assertThatThrownBy(() -> service.removeMember(job, 3L, responsible)).isInstanceOfSatisfying(ResponseStatusException.class,
+                e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
+        // somebody already in the chat can't be added again
+        assertThatThrownBy(() -> service.addMember(job, registered, responsible)).isInstanceOfSatisfying(ResponseStatusException.class,
+                e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
+    }
+
+    @Test
+    void nobodyIsAddedToAnArchivedChat() {
+        job.setStatus(JobStatus.COMPLETED);
+        assertThatThrownBy(() -> service.addMember(job, stranger, responsible)).isInstanceOfSatisfying(ResponseStatusException.class,
+                e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
     }
 }

@@ -44,6 +44,10 @@ final class NotificationTexts {
         return new Text(truncate(job.getDescription()), body.length() <= 140 ? body : body.substring(0, 139) + "…");
     }
 
+    static Text addedToChat(Job job, User actor) {
+        return new Text("Hozzáadtak egy chathez", actor.getFullName() + " hozzáadott a munka chatjéhez: " + describe(job));
+    }
+
     static Text jobNotClosed(Job job, boolean reminder) {
         return reminder
                 ? new Text("Emlékeztető: lezáratlan munka", "Még mindig nincs lezárva: " + describe(job))

@@ -100,6 +100,15 @@ public class PushNotificationService {
         }));
     }
 
+    /** Someone was added to the chat of a job without being registered: they get told, whatever they muted before. */
+    public void addedToChat(Long jobId, Long targetId, User actor) {
+        inBackground("added to chat " + jobId, () -> jobService.findById(jobId).ifPresent(job -> {
+            NotificationTexts.Text text = NotificationTexts.addedToChat(job, actor);
+            pushService.send(deviceTokenRepository.findForUsers(List.of(targetId), NotificationType.JOB_CHAT_MESSAGE),
+                    NotificationType.JOB_CHAT_MESSAGE, text.title(), text.body(), jobData(job));
+        }));
+    }
+
     /** Reminders older than this are ignored, so jobs that were forgotten long ago aren't announced out of the blue. */
     static final int CLOSE_REMINDER_MAX_AGE_DAYS = 7;
     /** The second reminder goes out at this time on the day after the job. */

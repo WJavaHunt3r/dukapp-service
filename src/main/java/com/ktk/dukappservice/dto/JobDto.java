@@ -104,4 +104,6 @@ public class JobDto {
     private boolean cancellationOpen;
     /** The requesting user's own registration, null if none. Children are listed via the registrations endpoint. */
     private JobRegistrationStatus myRegistrationStatus;
+    /** Whether the requesting user takes part in the job's chat; null in lists. */
+    private Boolean chatAccess;
 }

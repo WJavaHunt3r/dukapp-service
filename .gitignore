@@ -226,3 +226,6 @@ hs_err_pid7428.log
 .idea/vcs.xml
 .idea/workspace.xml
 /.mvn/wrapper/maven-wrapper.jar
+
+# OAuth client secrets downloaded from Google Cloud: never commit
+client_secret*.json

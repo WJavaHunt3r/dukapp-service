@@ -26,11 +26,14 @@ public class JobChatService {
 
     private final JobChatMessageRepository messages;
     private final JobChatMuteRepository mutes;
+    private final JobChatMemberRepository members;
     private final JobService jobService;
 
-    public JobChatService(JobChatMessageRepository messages, JobChatMuteRepository mutes, JobService jobService) {
+    public JobChatService(JobChatMessageRepository messages, JobChatMuteRepository mutes, JobChatMemberRepository members,
+                          JobService jobService) {
         this.messages = messages;
         this.mutes = mutes;
+        this.members = members;
         this.jobService = jobService;
     }
 
@@ -48,7 +51,65 @@ public class JobChatService {
         }
         ids.add(job.getResponsible().getId());
         ids.add(job.getCreateUser().getId());
+        members.findByJobId(job.getId()).forEach(m -> ids.add(m.getUser().getId()));
         return ids;
+    }
+
+    /** Who may add and remove chat-only members: the people who organise the job. */
+    public boolean canManageMembers(User user, Job job) {
+        return user.hasPermission(Permission.JOB_MANAGE_ALL)
+                || job.getResponsible().getId().equals(user.getId())
+                || job.getCreateUser().getId().equals(user.getId());
+    }
+
+    /** Everyone in the chat with the reason they are in it; organisers first, then registered users, then members. */
+    public List<Person> participants(Job job) {
+        Map<Long, Person> result = new LinkedHashMap<>();
+        result.put(job.getResponsible().getId(), new Person(job.getResponsible(), "RESPONSIBLE", false));
+        result.putIfAbsent(job.getCreateUser().getId(), new Person(job.getCreateUser(), "CREATOR", false));
+        for (JobRegistration registration : jobService.findActiveRegistrations(job.getId())) {
+            if (registration.getStatus() == JobRegistrationStatus.REGISTERED) {
+                result.putIfAbsent(registration.getUser().getId(), new Person(registration.getUser(), "REGISTERED", false));
+            }
+        }
+        for (JobChatMember member : members.findByJobId(job.getId())) {
+            result.putIfAbsent(member.getUser().getId(), new Person(member.getUser(), "MEMBER", true));
+        }
+        return new ArrayList<>(result.values());
+    }
+
+    public record Person(User user, String role, boolean removable) {
+    }
+
+    /** Adds someone who isn't in the chat yet. Only organisers may, and only while the chat isn't archived. */
+    @Transactional
+    public JobChatMember addMember(Job job, User target, User actor) {
+        if (!canManageMembers(actor, job)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the people organising the job can add people to its chat.");
+        }
+        if (isArchived(job)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "The chat is archived, the job is closed.");
+        }
+        if (participantIds(job).contains(target.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, target.getFullName() + " is already in the chat.");
+        }
+        JobChatMember member = new JobChatMember();
+        member.setJob(job);
+        member.setUser(target);
+        member.setAddedBy(actor);
+        member.setAddedDateTime(LocalDateTime.now());
+        return members.save(member);
+    }
+
+    /** Removes someone who was added to the chat only; registered people leave by cancelling their registration. */
+    @Transactional
+    public void removeMember(Job job, Long userId, User actor) {
+        if (!canManageMembers(actor, job)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the people organising the job can remove people from its chat.");
+        }
+        JobChatMember member = members.findByJobIdAndUserId(job.getId(), userId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.CONFLICT, "Only people who were added to the chat can be removed from it."));
+        members.delete(member);
     }
 
     public boolean canAccess(User user, Job job) {

@@ -2,6 +2,7 @@ package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.activity.Activity;
 import com.ktk.dukappservice.data.jobregistrations.JobRegistration;
+import com.ktk.dukappservice.data.jobchat.JobChatService;
 import com.ktk.dukappservice.data.jobs.Job;
 import com.ktk.dukappservice.data.jobs.JobCounts;
 import com.ktk.dukappservice.data.jobs.JobService;
@@ -49,9 +50,11 @@ public class JobController {
     private final UserService userService;
     private final ActivityMapper activityMapper;
     private final PushNotificationService pushNotificationService;
+    private final JobChatService jobChatService;
 
     public JobController(JobService jobService, JobMapper jobMapper, UserService userService, ActivityMapper activityMapper,
-                         PushNotificationService pushNotificationService) {
+                         PushNotificationService pushNotificationService, JobChatService jobChatService) {
+        this.jobChatService = jobChatService;
         this.pushNotificationService = pushNotificationService;
         this.jobService = jobService;
         this.jobMapper = jobMapper;
@@ -204,8 +207,10 @@ public class JobController {
     }
 
     private JobDto toDto(Job job, User user) {
-        return jobMapper.toDto(job, jobService.countsFor(job.getId()),
+        JobDto dto = jobMapper.toDto(job, jobService.countsFor(job.getId()),
                 jobService.statusesForUser(List.of(job.getId()), user.getId()).get(job.getId()));
+        dto.setChatAccess(jobChatService.canAccess(user, job));
+        return dto;
     }
 
     private Job findJob(Long id) {

@@ -4,25 +4,18 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="Job comments">
+    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="job chat">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/NotificationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/Job.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/users/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/users/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/users/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/users/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/NotificationType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/NotificationType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/UserImportService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/UserImportService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationScheduler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationScheduler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobchat/JobChatService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobchat/JobChatService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/dto/JobDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/dto/JobDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationTexts.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationTexts.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/PushNotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/PushNotificationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobs/JobServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobs/JobServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/service/notifications/PushNotificationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/service/notifications/PushNotificationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobchat/JobChatServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobchat/JobChatServiceTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -336,7 +329,8 @@
     <MESSAGE value="Spouses" />
     <MESSAGE value="Havi OnTrack lokal" />
     <MESSAGE value="Job comments" />
-    <option name="LAST_COMMIT_MESSAGE" value="Job comments" />
+    <MESSAGE value="job chat" />
+    <option name="LAST_COMMIT_MESSAGE" value="job chat" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

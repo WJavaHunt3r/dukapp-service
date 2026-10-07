@@ -6,9 +6,11 @@ import com.ktk.dukappservice.data.jobs.Job;
 import com.ktk.dukappservice.data.jobs.JobService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
+import com.ktk.dukappservice.dto.JobChatAddMemberDto;
 import com.ktk.dukappservice.dto.JobChatDto;
 import com.ktk.dukappservice.dto.JobChatMessageDto;
 import com.ktk.dukappservice.dto.JobChatMuteDto;
+import com.ktk.dukappservice.dto.JobChatPeopleDto;
 import com.ktk.dukappservice.dto.JobChatSendDto;
 import com.ktk.dukappservice.service.notifications.PushNotificationService;
 import jakarta.validation.Valid;
@@ -76,6 +78,38 @@ public class JobChatController {
         requireAccess(user, job);
         chatService.setMuted(job, user, body.isMuted());
         return ResponseEntity.ok(body.isMuted());
+    }
+
+    /** Everyone in the chat, with whether the current user may add and remove chat-only members. */
+    @GetMapping("/members")
+    public ResponseEntity<?> getMembers(@PathVariable Long jobId, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
+        Job job = findJob(jobId);
+        requireAccess(user, job);
+        List<JobChatPeopleDto.Person> people = chatService.participants(job).stream()
+                .map(p -> new JobChatPeopleDto.Person(p.user().getId(), p.user().getFullName(), p.role(), p.removable()))
+                .toList();
+        return ResponseEntity.ok(new JobChatPeopleDto(people, chatService.canManageMembers(user, job) && !JobChatService.isArchived(job)));
+    }
+
+    @PostMapping("/members")
+    public ResponseEntity<?> addMember(@PathVariable Long jobId, @Valid @RequestBody JobChatAddMemberDto body,
+                                       @AuthenticationPrincipal UserDetails userDetails) {
+        User actor = userService.getCurrentUser(userDetails);
+        Job job = findJob(jobId);
+        User target = userService.findById(body.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No user with id: " + body.getUserId()));
+        chatService.addMember(job, target, actor);
+        pushNotificationService.addedToChat(jobId, target.getId(), actor);
+        return ResponseEntity.ok("Added");
+    }
+
+    @DeleteMapping("/members/{userId}")
+    public ResponseEntity<?> removeMember(@PathVariable Long jobId, @PathVariable Long userId,
+                                          @AuthenticationPrincipal UserDetails userDetails) {
+        User actor = userService.getCurrentUser(userDetails);
+        chatService.removeMember(findJob(jobId), userId, actor);
+        return ResponseEntity.ok("Removed");
     }
 
     private void requireAccess(User user, Job job) {
