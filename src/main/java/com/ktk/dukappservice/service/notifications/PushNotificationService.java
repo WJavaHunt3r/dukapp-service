@@ -1,6 +1,7 @@
 package com.ktk.dukappservice.service.notifications;
 
 import com.ktk.dukappservice.data.jobregistrations.JobRegistration;
+import com.ktk.dukappservice.data.jobchat.JobChatService;
 import com.ktk.dukappservice.data.jobs.Job;
 import com.ktk.dukappservice.data.jobs.JobService;
 import com.ktk.dukappservice.data.notifications.*;
@@ -34,6 +35,7 @@ public class PushNotificationService {
     private final DeviceTokenRepository deviceTokenRepository;
     private final GeneralNotificationRepository generalNotificationRepository;
     private final JobService jobService;
+    private final JobChatService jobChatService;
     private final ExecutorService executor;
 
     @Value("${app.users.baseChurch}")
@@ -41,17 +43,19 @@ public class PushNotificationService {
 
     @Autowired
     public PushNotificationService(PushService pushService, DeviceTokenRepository deviceTokenRepository,
-                                   GeneralNotificationRepository generalNotificationRepository, JobService jobService) {
-        this(pushService, deviceTokenRepository, generalNotificationRepository, jobService, Executors.newVirtualThreadPerTaskExecutor());
+                                   GeneralNotificationRepository generalNotificationRepository, JobService jobService,
+                                   JobChatService jobChatService) {
+        this(pushService, deviceTokenRepository, generalNotificationRepository, jobService, jobChatService, Executors.newVirtualThreadPerTaskExecutor());
     }
 
     PushNotificationService(PushService pushService, DeviceTokenRepository deviceTokenRepository,
                             GeneralNotificationRepository generalNotificationRepository, JobService jobService,
-                            ExecutorService executor) {
+                            JobChatService jobChatService, ExecutorService executor) {
         this.pushService = pushService;
         this.deviceTokenRepository = deviceTokenRepository;
         this.generalNotificationRepository = generalNotificationRepository;
         this.jobService = jobService;
+        this.jobChatService = jobChatService;
         this.executor = executor;
     }
 
@@ -81,6 +85,94 @@ public class PushNotificationService {
             NotificationTexts.Text text = NotificationTexts.jobNew(job);
             pushService.send(devices, NotificationType.JOB_NEW, text.title(), text.body(), jobData(job));
         }));
+    }
+
+    /** New chat message: everyone taking part except the sender and who muted the chat (see {@link JobChatService}). */
+    public void chatMessage(Long jobId, User sender, String text) {
+        inBackground("chat message " + jobId, () -> jobService.findById(jobId).ifPresent(job -> {
+            Set<Long> recipients = jobChatService.recipientIds(job, sender.getId());
+            if (recipients.isEmpty()) {
+                return;
+            }
+            NotificationTexts.Text notification = NotificationTexts.chatMessage(job, sender, text);
+            pushService.send(deviceTokenRepository.findForUsers(recipients, NotificationType.JOB_CHAT_MESSAGE),
+                    NotificationType.JOB_CHAT_MESSAGE, notification.title(), notification.body(), jobData(job));
+        }));
+    }
+
+    /** Someone was added to the chat of a job without being registered: they get told, whatever they muted before. */
+    public void addedToChat(Long jobId, Long targetId, User actor) {
+        inBackground("added to chat " + jobId, () -> jobService.findById(jobId).ifPresent(job -> {
+            NotificationTexts.Text text = NotificationTexts.addedToChat(job, actor);
+            pushService.send(deviceTokenRepository.findForUsers(List.of(targetId), NotificationType.JOB_CHAT_MESSAGE),
+                    NotificationType.JOB_CHAT_MESSAGE, text.title(), text.body(), jobData(job));
+        }));
+    }
+
+    /** Reminders older than this are ignored, so jobs that were forgotten long ago aren't announced out of the blue. */
+    static final int CLOSE_REMINDER_MAX_AGE_DAYS = 7;
+    /** The second reminder goes out at this time on the day after the job. */
+    static final java.time.LocalTime SECOND_REMINDER_TIME = java.time.LocalTime.of(9, 0);
+
+    /**
+     * Reminds the responsible user of jobs that are over but not closed: one hour after the end, and again on the
+     * next day. Marks each reminder before sending so it is never repeated. Runs every minute on the scheduler.
+     */
+    public void sendCloseReminders() {
+        LocalDateTime now = LocalDateTime.now();
+        for (Job job : jobService.findOverdueOpenJobs(now.minusHours(1))) {
+            LocalDateTime end = JobService.endOf(job);
+            if (end.isBefore(now.minusDays(CLOSE_REMINDER_MAX_AGE_DAYS))) {
+                continue;
+            }
+            LocalDateTime first = job.getCloseReminderSentDateTime();
+            boolean second;
+            if (first == null) {
+                second = false;
+            } else if (job.getCloseReminder2SentDateTime() == null
+                    && !now.isBefore(end.toLocalDate().plusDays(1).atTime(SECOND_REMINDER_TIME))
+                    && !now.isBefore(first.plusHours(1))) {
+                second = true;
+            } else {
+                continue;
+            }
+            jobService.markCloseReminderSent(job.getId(), second);
+            NotificationTexts.Text text = NotificationTexts.jobNotClosed(job, second);
+            pushService.send(deviceTokenRepository.findForUsers(List.of(job.getResponsible().getId()), NotificationType.JOB_NOT_CLOSED),
+                    NotificationType.JOB_NOT_CLOSED, text.title(), text.body(), jobData(job));
+        }
+    }
+
+    /** Over-and-still-open jobs grouped by the responsible user (the one who can submit the hours). */
+    public Map<User, List<Job>> overdueJobsByResponsible() {
+        Map<User, List<Job>> result = new LinkedHashMap<>();
+        for (Job job : jobService.findOverdueOpenJobs(LocalDateTime.now())) {
+            result.computeIfAbsent(job.getResponsible(), u -> new ArrayList<>()).add(job);
+        }
+        return result;
+    }
+
+    /**
+     * Admin action: tells users that jobs of theirs still wait for their hours. {@code userIds} empty = everyone who
+     * has such jobs. One notification per user, however many jobs.
+     */
+    public PushService.Result remindOverdue(Set<Long> userIds) {
+        int users = 0, devices = 0, delivered = 0, failed = 0;
+        for (Map.Entry<User, List<Job>> entry : overdueJobsByResponsible().entrySet()) {
+            if (!userIds.isEmpty() && !userIds.contains(entry.getKey().getId())) {
+                continue;
+            }
+            NotificationTexts.Text text = NotificationTexts.jobsNotClosed(entry.getValue());
+            Map<String, String> data = entry.getValue().size() == 1 ? jobData(entry.getValue().getFirst()) : Map.of();
+            PushService.Result result = pushService.send(
+                    deviceTokenRepository.findForUsers(List.of(entry.getKey().getId()), NotificationType.JOB_NOT_CLOSED),
+                    NotificationType.JOB_NOT_CLOSED, text.title(), text.body(), data);
+            users += result.users();
+            devices += result.devices();
+            delivered += result.delivered();
+            failed += result.failed();
+        }
+        return new PushService.Result(users, devices, delivered, failed);
     }
 
     /** Cancelled job: everyone registered or waitlisted, except whoever cancelled it. */

@@ -11,6 +11,10 @@ public enum NotificationType {
     JOB_CANCELLED(NotificationChannel.PUSH),
     /** Someone else (a parent, an organizer) registered the user for a job. */
     JOB_REGISTERED_BY_OTHER(NotificationChannel.PUSH),
+    /** A new message in the chat of a job the user takes part in (can be muted per job). */
+    JOB_CHAT_MESSAGE(NotificationChannel.PUSH),
+    /** A job the user is responsible for is over but its hours haven't been submitted. */
+    JOB_NOT_CLOSED(NotificationChannel.PUSH),
     /** A transaction was manually created for the user. */
     TRANSACTION_CREATED(NotificationChannel.PUSH),
     /** Recurring weekly notification defined by an admin. */

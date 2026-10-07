@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AuthController.class);
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
@@ -128,7 +129,7 @@ public class AuthController {
         user.setLastname(registerDto.getLastname());
         user.setGender(registerDto.getGender());
 
-        userService.save(user);
+        userService.saveNewUser(user);
         auditLogService.recordAs(user.getUsername(), AuditAction.REGISTER, "User", user.getId(), Map.of("method", "password"));
 
         // 3. Optional: Return a JWT immediately so they don't have to log in right after registering
@@ -210,9 +211,19 @@ public class AuthController {
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> payload) {
         String idTokenString = payload.get("idToken");
 
+        // 1. Verify the token. Only problems with the token itself are "invalid token"; what goes wrong afterwards
+        // (creating the user, ...) is a server problem and must not be reported as one.
+        GoogleIdToken idToken;
         try {
-            // 1. Verify the token
-            GoogleIdToken idToken = googleIdTokenVerifier.verify(idTokenString);
+            idToken = googleIdTokenVerifier.verify(idTokenString);
+        } catch (Exception e) {
+            LOG.warn("Google ID token could not be verified", e);
+            auditLogService.recordAs(null, AuditAction.LOGIN_FAILED, null, null,
+                    Map.of("method", "google", "reason", e.getClass().getSimpleName()));
+            return ResponseEntity.status(401).body("Invalid Google Token");
+        }
+
+        try {
             if (idToken != null) {
                 GoogleIdToken.Payload googlePayload = idToken.getPayload();
 
@@ -227,7 +238,6 @@ public class AuthController {
                     newUser.setEmail(email);
                     newUser.setFirstname(name.firstname());
                     newUser.setLastname(name.lastname());
-                    newUser.setMyShareID(null);
                     // Generate username using your normalization logic; never from a placeholder name
                     String baseUsername = name.complete()
                             ? normalizeUsername(name.lastname(), name.firstname())
@@ -245,7 +255,7 @@ public class AuthController {
                     newUser.setUsername(finalUsername);
                     newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString())); // Random pass
                     newUser.setRoles(new HashSet<>(Set.of(appRoleService.getDefaultRole())));
-                    User saved = userService.save(newUser);
+                    User saved = userService.saveNewUser(newUser);
                     auditLogService.recordAs(saved.getUsername(), AuditAction.REGISTER, "User", saved.getId(), Map.of("method", "google"));
                     return saved;
                 });
@@ -257,12 +267,24 @@ public class AuthController {
                 return ResponseEntity.ok(jwtResponse(jwt, refreshToken, user));
             }
         } catch (Exception e) {
+            LOG.error("Google sign-in failed after the token was verified", e);
+            // The audit log is for admins: it gets the database's own message (constraint name, column), which the
+            // response to the caller must not carry.
             auditLogService.recordAs(null, AuditAction.LOGIN_FAILED, null, null,
-                    Map.of("method", "google", "reason", e.getClass().getSimpleName()));
-            return ResponseEntity.status(401).body("Invalid Google Token");
+                    Map.of("method", "google", "reason", e.getClass().getSimpleName(), "cause", rootCauseMessage(e)));
+            return ResponseEntity.status(500).body("Google sign-in failed on the server: " + e.getClass().getSimpleName());
         }
         auditLogService.recordAs(null, AuditAction.LOGIN_FAILED, null, null, Map.of("method", "google", "reason", "token rejected"));
         return ResponseEntity.status(401).body("Google Authentication Failed");
+    }
+
+    private static String rootCauseMessage(Throwable e) {
+        Throwable root = e;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        String message = root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage();
+        return message.length() <= 400 ? message : message.substring(0, 400);
     }
 
     @PostMapping("/refreshtoken")

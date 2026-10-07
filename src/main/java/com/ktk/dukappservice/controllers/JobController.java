@@ -2,6 +2,7 @@ package com.ktk.dukappservice.controllers;
 
 import com.ktk.dukappservice.data.activity.Activity;
 import com.ktk.dukappservice.data.jobregistrations.JobRegistration;
+import com.ktk.dukappservice.data.jobchat.JobChatService;
 import com.ktk.dukappservice.data.jobs.Job;
 import com.ktk.dukappservice.data.jobs.JobCounts;
 import com.ktk.dukappservice.data.jobs.JobService;
@@ -49,9 +50,11 @@ public class JobController {
     private final UserService userService;
     private final ActivityMapper activityMapper;
     private final PushNotificationService pushNotificationService;
+    private final JobChatService jobChatService;
 
     public JobController(JobService jobService, JobMapper jobMapper, UserService userService, ActivityMapper activityMapper,
-                         PushNotificationService pushNotificationService) {
+                         PushNotificationService pushNotificationService, JobChatService jobChatService) {
+        this.jobChatService = jobChatService;
         this.pushNotificationService = pushNotificationService;
         this.jobService = jobService;
         this.jobMapper = jobMapper;
@@ -67,6 +70,7 @@ public class JobController {
     @GetMapping()
     public ResponseEntity<?> getJobs(@RequestParam(value = "status", required = false) JobStatus status,
                                      @RequestParam(value = "responsibleId", required = false) Long responsibleId,
+                                     @RequestParam(value = "employerId", required = false) Long employerId,
                                      @RequestParam(value = "registeredUserId", required = false) Long registeredUserId,
                                      @RequestParam(value = "openOnly", required = false, defaultValue = "false") boolean openOnly,
                                      @RequestParam(value = "dateFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -75,7 +79,7 @@ public class JobController {
                                      @AuthenticationPrincipal UserDetails userDetails,
                                      @PageableDefault(sort = "jobDateTime") Pageable pageable) {
         User user = userService.getCurrentUser(userDetails);
-        Page<Job> jobs = jobService.fetchByQuery(status, responsibleId, registeredUserId, openOnly, dateFrom, dateTo, searchText, pageable);
+        Page<Job> jobs = jobService.fetchByQuery(status, responsibleId, employerId, registeredUserId, openOnly, dateFrom, dateTo, searchText, pageable);
         List<Long> ids = jobs.getContent().stream().map(Job::getId).toList();
         Map<Long, JobCounts> counts = jobService.countsFor(ids);
         Map<Long, JobRegistrationStatus> mine = jobService.statusesForUser(ids, user.getId());
@@ -203,8 +207,10 @@ public class JobController {
     }
 
     private JobDto toDto(Job job, User user) {
-        return jobMapper.toDto(job, jobService.countsFor(job.getId()),
+        JobDto dto = jobMapper.toDto(job, jobService.countsFor(job.getId()),
                 jobService.statusesForUser(List.of(job.getId()), user.getId()).get(job.getId()));
+        dto.setChatAccess(jobChatService.canAccess(user, job));
+        return dto;
     }
 
     private Job findJob(Long id) {

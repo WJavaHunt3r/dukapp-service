@@ -9,6 +9,7 @@ import com.ktk.dukappservice.data.jobregistrations.JobRegistrationService;
 import com.ktk.dukappservice.data.rounds.Round;
 import com.ktk.dukappservice.data.rounds.RoundService;
 import com.ktk.dukappservice.data.users.User;
+import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.enums.JobRegistrationStatus;
 import com.ktk.dukappservice.enums.JobStatus;
 import com.ktk.dukappservice.enums.Permission;
@@ -55,14 +56,16 @@ public class JobService extends BaseService<Job, Long> {
     private final ActivityService activityService;
     private final ActivityItemService activityItemService;
     private final RoundService roundService;
+    private final UserService userService;
 
     public JobService(JobRepository repository, JobRegistrationService registrations, ActivityService activityService,
-                      ActivityItemService activityItemService, RoundService roundService) {
+                      ActivityItemService activityItemService, RoundService roundService, UserService userService) {
         this.repository = repository;
         this.registrations = registrations;
         this.activityService = activityService;
         this.activityItemService = activityItemService;
         this.roundService = roundService;
+        this.userService = userService;
     }
 
     /** Hours of one registered user, as submitted when completing a job. {@code description} is optional. */
@@ -71,7 +74,7 @@ public class JobService extends BaseService<Job, Long> {
 
     // ---------------------------------------------------------------- queries
 
-    public Page<Job> fetchByQuery(JobStatus status, Long responsibleId, Long registeredUserId, boolean openOnly,
+    public Page<Job> fetchByQuery(JobStatus status, Long responsibleId, Long employerId, Long registeredUserId, boolean openOnly,
                                   LocalDate dateFrom, LocalDate dateTo, String searchText, Pageable pageable) {
         Specification<Job> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -81,9 +84,14 @@ public class JobService extends BaseService<Job, Long> {
             if (responsibleId != null) {
                 predicates.add(cb.equal(root.get(Job.Fields.responsible).get("id"), responsibleId));
             }
+            if (employerId != null) {
+                predicates.add(cb.equal(root.get(Job.Fields.employer).get("id"), employerId));
+            }
             if (openOnly) {
+                // Still takes registrations (maybe from a later opening time on): open, and no deadline or one in the future
                 predicates.add(cb.equal(root.get(Job.Fields.status), JobStatus.OPEN));
-                predicates.add(cb.greaterThan(root.<LocalDateTime>get(Job.Fields.registrationDeadline), LocalDateTime.now()));
+                predicates.add(cb.or(cb.isNull(root.get(Job.Fields.registrationDeadline)),
+                        cb.greaterThan(root.<LocalDateTime>get(Job.Fields.registrationDeadline), LocalDateTime.now())));
             }
             if (dateFrom != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.<LocalDateTime>get(Job.Fields.jobDateTime), dateFrom.atStartOfDay()));
@@ -163,11 +171,20 @@ public class JobService extends BaseService<Job, Long> {
                 || job.getCreateUser().getId().equals(actor.getId());
     }
 
-    /** Yourself, your child (same familyId, you are an adult and they are not), or anyone with JOB_MANAGE_ALL. */
+    /**
+     * Yourself, your spouse, your child (same familyId, you are an adult and they are not), or anyone with
+     * JOB_MANAGE_ALL.
+     */
     public boolean canActFor(User actor, User target) {
         return actor.getId().equals(target.getId())
                 || actor.hasPermission(Permission.JOB_MANAGE_ALL)
+                || isSpouseOf(actor, target)
                 || isParentOf(actor, target);
+    }
+
+    /** Either of the two names the other as spouse, so it works whichever record was filled in. */
+    public static boolean isSpouseOf(User user, User other) {
+        return user.getId().equals(other.getSpouseId()) || other.getId().equals(user.getSpouseId());
     }
 
     public static boolean isParentOf(User parent, User child) {
@@ -275,6 +292,7 @@ public class JobService extends BaseService<Job, Long> {
         copy.setEmployer(template.getEmployer());
         copy.setResponsible(template.getResponsible());
         copy.setDescription(template.getDescription());
+        copy.setComment(template.getComment());
         copy.setAccount(template.getAccount());
         copy.setTransactionType(template.getTransactionType());
         copy.setJobDateTime(template.getJobDateTime().plus(shift));
@@ -292,6 +310,44 @@ public class JobService extends BaseService<Job, Long> {
         copy.setMaxAge(template.getMaxAge());
         copy.setGenderRestriction(template.getGenderRestriction());
         return copy;
+    }
+
+    /**
+     * Call before deleting an activity: a job that was completed into it is reopened (hours can be submitted again)
+     * instead of keeping a reference to a deleted row, which the database refuses.
+     */
+    @Transactional
+    public void releaseActivity(Long activityId) {
+        for (Job job : repository.findByActivityId(activityId)) {
+            job.setActivity(null);
+            job.setCompletedDateTime(null);
+            if (job.getStatus() == JobStatus.COMPLETED) {
+                job.setStatus(JobStatus.OPEN);
+            }
+            save(job);
+        }
+    }
+
+    /** When the job is over: its end, or its start for jobs without an end time. */
+    public static LocalDateTime endOf(Job job) {
+        return job.getJobEndDateTime() != null ? job.getJobEndDateTime() : job.getJobDateTime();
+    }
+
+    /** Open jobs that are over (ended at or before {@code endBefore}) and still wait for their hours. */
+    public List<Job> findOverdueOpenJobs(LocalDateTime endBefore) {
+        return repository.findOverdueOpen(JobStatus.OPEN, endBefore);
+    }
+
+    /** Records a close reminder as sent ({@code second} = the one on the next day), so it is never sent twice. */
+    @Transactional
+    public void markCloseReminderSent(Long jobId, boolean second) {
+        Job job = lock(jobId);
+        if (second) {
+            job.setCloseReminder2SentDateTime(LocalDateTime.now());
+        } else {
+            job.setCloseReminderSentDateTime(LocalDateTime.now());
+        }
+        save(job);
     }
 
     /** Open jobs whose "new job" notification should go out now. */
@@ -474,9 +530,12 @@ public class JobService extends BaseService<Job, Long> {
             }
         }
         Set<Long> registeredUserIds = registered.stream().map(r -> r.getUser().getId()).collect(Collectors.toSet());
+        // People who turned up without being registered can be added too (any existing user, any eligibility)
+        Map<Long, User> extraUsers = new LinkedHashMap<>();
         for (Long userId : hoursByUser.keySet()) {
             if (!registeredUserIds.contains(userId)) {
-                throw badRequest("User " + userId + " is not registered for this job.");
+                extraUsers.put(userId, userService.findById(userId)
+                        .orElseThrow(() -> badRequest("No user with id: " + userId)));
             }
         }
         for (JobRegistration registration : registered) {
@@ -506,18 +565,13 @@ public class JobService extends BaseService<Job, Long> {
             registration.setHours(entry.hours());
             registrations.save(registration);
             if (entry.hours() > 0) {
-                ActivityItem item = new ActivityItem();
-                item.setActivity(activity);
-                item.setUser(registration.getUser());
-                item.setCreateUser(actor);
-                item.setCreateDateTime(now);
-                item.setDescription(truncate(entry.description() == null || entry.description().isBlank()
-                        ? job.getDescription() : entry.description().trim(), ACTIVITY_ITEM_DESCRIPTION_MAX));
-                item.setTransactionType(job.getTransactionType());
-                item.setAccount(job.getAccount());
-                item.setHours(entry.hours());
-                item.setRound(round);
-                activityItemService.save(item);
+                saveActivityItem(activity, job, registration.getUser(), actor, entry, round, now);
+            }
+        }
+        for (Map.Entry<Long, User> extra : extraUsers.entrySet()) {
+            HoursEntry entry = hoursByUser.get(extra.getKey());
+            if (entry.hours() > 0) {
+                saveActivityItem(activity, job, extra.getValue(), actor, entry, round, now);
             }
         }
 
@@ -529,6 +583,21 @@ public class JobService extends BaseService<Job, Long> {
     }
 
     // ---------------------------------------------------------------- helpers
+
+    private void saveActivityItem(Activity activity, Job job, User user, User actor, HoursEntry entry, Round round, LocalDateTime now) {
+        ActivityItem item = new ActivityItem();
+        item.setActivity(activity);
+        item.setUser(user);
+        item.setCreateUser(actor);
+        item.setCreateDateTime(now);
+        item.setDescription(truncate(entry.description() == null || entry.description().isBlank()
+                ? job.getDescription() : entry.description().trim(), ACTIVITY_ITEM_DESCRIPTION_MAX));
+        item.setTransactionType(job.getTransactionType());
+        item.setAccount(job.getAccount());
+        item.setHours(entry.hours());
+        item.setRound(round);
+        activityItemService.save(item);
+    }
 
     private void promoteFromWaitlist(Job job) {
         List<JobRegistration> waiting = registrations.findByJobAndStatus(job.getId(), WAITLISTED);
@@ -563,7 +632,7 @@ public class JobService extends BaseService<Job, Long> {
 
     private void requireCanActFor(User actor, User target) {
         if (!canActFor(actor, target)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only do this for yourself or your children.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only do this for yourself, your spouse or your children.");
         }
     }
 

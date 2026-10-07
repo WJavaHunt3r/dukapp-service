@@ -29,6 +29,10 @@ public class JobDto {
     @Size(max = 200)
     private String description;
 
+    /** Longer text with details about the job; optional. */
+    @Size(max = 4000)
+    private String comment;
+
     @NotNull
     private Long employerId;
 
@@ -100,4 +104,6 @@ public class JobDto {
     private boolean cancellationOpen;
     /** The requesting user's own registration, null if none. Children are listed via the registrations endpoint. */
     private JobRegistrationStatus myRegistrationStatus;
+    /** Whether the requesting user takes part in the job's chat; null in lists. */
+    private Boolean chatAccess;
 }

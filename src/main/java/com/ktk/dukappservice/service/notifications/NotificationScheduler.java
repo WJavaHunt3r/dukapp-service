@@ -44,6 +44,16 @@ public class NotificationScheduler implements ApplicationRunner {
         }
     }
 
+    /** Reminds responsible users of jobs that are over but not closed yet (an hour after the end, and the next day). */
+    @Scheduled(cron = "0 * * * * *")
+    public void remindUnclosedJobs() {
+        try {
+            pushNotificationService.sendCloseReminders();
+        } catch (Exception e) {
+            LOG.error("Close reminders failed", e);
+        }
+    }
+
     @Scheduled(cron = "0 * * * * *")
     public void runDueSchedules() {
         LocalDateTime now = LocalDateTime.now();

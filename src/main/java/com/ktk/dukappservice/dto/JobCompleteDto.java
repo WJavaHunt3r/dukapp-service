@@ -11,7 +11,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-/** Hours for every registered user of the job (0 for no-shows). */
+/** Hours for every registered user of the job (0 for no-shows), plus optionally users who weren't registered. */
 @NoArgsConstructor
 @Getter
 @Setter

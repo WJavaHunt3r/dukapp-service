@@ -54,6 +54,11 @@ public class Job extends BaseEntity<Job, Long> {
     @NotEmpty
     private String description;
 
+    /** Longer free text from the creator (details, what to bring, ...). Optional. */
+    @Size(max = 4000)
+    @Column(name = "JOB_COMMENT", length = 4000)
+    private String comment;
+
     @JoinColumn(name = "EMPLOYER")
     @ManyToOne
     @NotNull
@@ -137,6 +142,14 @@ public class Job extends BaseEntity<Job, Long> {
     @Enumerated(EnumType.STRING)
     @NotNull
     private JobStatus status = JobStatus.OPEN;
+
+    /** When the first reminder ("the job is over, close it") went to the responsible user; null while not sent. */
+    @Column(name = "CLOSE_REMINDER_SENT")
+    private LocalDateTime closeReminderSentDateTime;
+
+    /** When the second reminder (the day after) went out; null while not sent. */
+    @Column(name = "CLOSE_REMINDER_2_SENT")
+    private LocalDateTime closeReminder2SentDateTime;
 
     /** The activity created when the job was completed. */
     @JoinColumn(name = "ACTIVITY")

@@ -75,9 +75,11 @@ public class UserImportService {
                 System.out.println(u.getFirstname() + " " + u.getLastname());
                 Optional<User> existingUser = userService.findByUsername(u.getUsername());
                 if (existingUser.isEmpty()) {
+                    userService.assignBaseChurch(u);
                     userService.save(u);
                 } else {
                     copyUser(existingUser.get(), u);
+                    userService.assignBaseChurch(existingUser.get());
                     userService.save(existingUser.get());
                 }
             }

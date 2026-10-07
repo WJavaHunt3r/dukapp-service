@@ -4,22 +4,18 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="Havi OnTrack lokal">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="e2a6a1b6-a161-44aa-b303-d4d8c9265d29" name="Default Changelist" comment="job chat">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/config/EnumCheckConstraintCleanup.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/config/EnumCheckConstraintCleanup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/JobController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/TransactionItemsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/controllers/TransactionItemsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/auditlog/AuditEntityListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/auditlog/AuditEntityListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobs/JobService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/Permission.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/enums/Permission.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/NotificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobchat/JobChatService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/data/jobchat/JobChatService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/dto/JobDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/dto/JobDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationTexts.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/NotificationTexts.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/PushNotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ktk/dukappservice/service/notifications/PushNotificationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobchat/JobChatServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/ktk/dukappservice/data/jobchat/JobChatServiceTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +95,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="user-permissions" />
+        <entry key="$PROJECT_DIR$" value="push-notifications" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -135,33 +131,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Maven.dukapp-service [clean].executor": "Run",
-    "Maven.dukapp-service [install].executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.WorkHuServiceApplication.executor": "Debug",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "push-notifications",
-    "kotlin-language-version-configured": "true",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "preferences.keymap"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Maven.dukapp-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.dukapp-service [install].executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.WorkHuServiceApplication.executor&quot;: &quot;Debug&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;repeating-jobs&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\workspace\private\work-hu-service\src\main\resources\imports\docs" />
@@ -332,7 +328,9 @@
     <MESSAGE value="Send activities to teams" />
     <MESSAGE value="Spouses" />
     <MESSAGE value="Havi OnTrack lokal" />
-    <option name="LAST_COMMIT_MESSAGE" value="Havi OnTrack lokal" />
+    <MESSAGE value="Job comments" />
+    <MESSAGE value="job chat" />
+    <option name="LAST_COMMIT_MESSAGE" value="job chat" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

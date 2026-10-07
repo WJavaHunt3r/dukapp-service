@@ -32,6 +32,34 @@ public class UserService extends BaseService<User, Long> {
     @Value("${app.users.baseChurch}")
     private Long baseChurch;
 
+    /** MyShare ids given to people who register in the app count up from here (6 digits). */
+    static final long FIRST_APP_MYSHARE_ID = 100001L;
+    static final long LAST_APP_MYSHARE_ID = 999999L;
+
+    /**
+     * Saves a user who just registered and gives them the next free 6-digit MyShare id (100001, 100002, ...) unless
+     * they already have one. Synchronized so two registrations at the same moment can't get the same number.
+     */
+    public synchronized User saveNewUser(User user) {
+        if (user.getMyShareID() == null) {
+            user.setMyShareID(nextMyShareId());
+        }
+        return save(user);
+    }
+
+    private long nextMyShareId() {
+        Long highest = userRepository.findMaxMyShareIdBetween(FIRST_APP_MYSHARE_ID, LAST_APP_MYSHARE_ID);
+        long next = highest == null ? FIRST_APP_MYSHARE_ID : highest + 1;
+        // Skip numbers somebody already holds (e.g. entered by hand above the highest one)
+        while (next <= LAST_APP_MYSHARE_ID && userRepository.findByMyShareID(next).isPresent()) {
+            next++;
+        }
+        if (next > LAST_APP_MYSHARE_ID) {
+            throw new IllegalStateException("No free 6-digit MyShare id left");
+        }
+        return next;
+    }
+
     public UserService(UserRepository userRepository, TransactionItemService transactionService, ChurchService churchService) {
         this.userRepository = userRepository;
         this.transactionItemService = transactionService;
@@ -131,9 +159,12 @@ public class UserService extends BaseService<User, Long> {
         return new User();
     }
 
-    @Override
-    public User save(User entity) {
-        churchService.findById(baseChurch).ifPresent(entity::setChurch);
-        return super.save(entity);
+    /**
+     * Gives the user the base church ({@code app.users.baseChurch}). Only for users who are known to belong to it (the
+     * CSV import). Saving never touches the church: users without one only get the balance and the profile in the app,
+     * and used to be moved into the base church again by every save (password change, status recalculation, ...).
+     */
+    public void assignBaseChurch(User user) {
+        churchService.findById(baseChurch).ifPresent(user::setChurch);
     }
 }

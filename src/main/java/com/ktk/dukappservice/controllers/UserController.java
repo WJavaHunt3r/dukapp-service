@@ -6,6 +6,7 @@ import com.ktk.dukappservice.data.paceteamround.PaceTeamRoundService;
 import com.ktk.dukappservice.data.roles.AppRole;
 import com.ktk.dukappservice.data.roles.AppRoleService;
 import com.ktk.dukappservice.data.seasons.SeasonService;
+import com.ktk.dukappservice.service.microsoft.MicrosoftService;
 import com.ktk.dukappservice.data.users.User;
 import com.ktk.dukappservice.data.users.UserService;
 import com.ktk.dukappservice.dto.UserDto;
@@ -15,6 +16,7 @@ import com.ktk.dukappservice.mapper.UserMapper;
 import com.ktk.dukappservice.service.UserFamilyImportService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,8 +36,14 @@ public class UserController {
     private final PaceTeamRoundService paceTeamRoundService;
     private final AppRoleService appRoleService;
     private final AuditLogService auditLogService;
+    private final MicrosoftService microsoftService;
 
-    public UserController(UserService userService, PaceTeamService paceTeamService, UserMapper modelMapper, SeasonService seasonService, PaceTeamRoundService paceTeamRoundService, UserFamilyImportService userFamilyImportService, AppRoleService appRoleService, AuditLogService auditLogService) {
+    /** Who is told when a user asks for their account to be deleted. */
+    @Value("${app.accountDeletion.adminEmail:support@bcc-ktk.org}")
+    private String accountDeletionAdminEmail;
+
+    public UserController(UserService userService, PaceTeamService paceTeamService, UserMapper modelMapper, SeasonService seasonService, PaceTeamRoundService paceTeamRoundService, UserFamilyImportService userFamilyImportService, AppRoleService appRoleService, AuditLogService auditLogService, MicrosoftService microsoftService) {
+        this.microsoftService = microsoftService;
         this.appRoleService = appRoleService;
         this.auditLogService = auditLogService;
         this.userService = userService;
@@ -85,13 +93,26 @@ public class UserController {
         return ResponseEntity.status(404).body("User not found");
     }
 
+    /**
+     * The signed-in user asks for their account and all data related to it to be deleted. An admin gets an e-mail and
+     * does it by hand; nothing is deleted here.
+     */
+    @PostMapping("/me/deletion-request")
+    public ResponseEntity<?> requestAccountDeletion(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
+        try {
+            microsoftService.sendAccountDeletionRequest(user, accountDeletionAdminEmail);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("The request could not be sent. Please e-mail " + accountDeletionAdminEmail + " instead.");
+        }
+        auditLogService.record(AuditAction.ACCOUNT_DELETION_REQUEST, "User", user.getId(), null);
+        return ResponseEntity.ok("Deletion request sent");
+    }
+
     @GetMapping("/me/family")
     public ResponseEntity<?> getFamily(@AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> user = userService.findByUsername(userDetails.getUsername());
         if (user.isPresent()) {
-            if (user.get().getAge() <= 18) {
-                return ResponseEntity.status(404).body("No kids");
-            }
             return ResponseEntity.status(200).body(userService.findFamily(user.get().getFamilyId(), user.get().getId()).stream().map(userMapper::entityToDto));
         }
 
