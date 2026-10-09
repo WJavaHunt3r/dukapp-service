@@ -83,6 +83,8 @@ public class DukAppSecurityConfig {
                         // The error page itself: unhandled exceptions are rendered there, and behind a login they
                         // turned every server error into an empty 403
                         .requestMatchers("/error").permitAll()
+                        // Calendar subscription feeds: calendar apps can't log in, the link carries a secret token
+                        .requestMatchers(HttpMethod.GET, "/api/calendar/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/donations/*").permitAll()

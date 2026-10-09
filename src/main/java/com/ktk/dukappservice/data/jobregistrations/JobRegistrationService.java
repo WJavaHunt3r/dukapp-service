@@ -14,6 +14,11 @@ public class JobRegistrationService extends BaseService<JobRegistration, Long> {
 
     private final JobRegistrationRepository repository;
 
+    public List<com.ktk.dukappservice.data.jobs.Job> findJobsOf(Long userId, java.time.LocalDateTime from) {
+        return repository.findJobsOf(userId, com.ktk.dukappservice.enums.JobRegistrationStatus.REGISTERED,
+                com.ktk.dukappservice.enums.JobStatus.CANCELLED, from);
+    }
+
     public JobRegistrationService(JobRegistrationRepository repository) {
         this.repository = repository;
     }

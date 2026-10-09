@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService extends BaseService<User, Long> {
@@ -45,6 +46,25 @@ public class UserService extends BaseService<User, Long> {
             user.setMyShareID(nextMyShareId());
         }
         return save(user);
+    }
+
+    public Optional<User> findByCalendarToken(String token) {
+        return token == null || token.isBlank() ? Optional.empty() : userRepository.findByCalendarToken(token);
+    }
+
+    /** The user's calendar link secret; created on first use. */
+    public String getOrCreateCalendarToken(User user) {
+        if (user.getCalendarToken() == null) {
+            return resetCalendarToken(user);
+        }
+        return user.getCalendarToken();
+    }
+
+    /** A new secret: the old link stops working, for when it was shared by mistake. */
+    public String resetCalendarToken(User user) {
+        user.setCalendarToken(UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+        save(user);
+        return user.getCalendarToken();
     }
 
     private long nextMyShareId() {

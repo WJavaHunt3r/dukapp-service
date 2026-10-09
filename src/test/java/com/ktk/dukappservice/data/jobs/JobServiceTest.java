@@ -782,4 +782,16 @@ class JobServiceTest {
         assertThat(service.register(1L, b, a, null).getStatus()).isEqualTo(JobRegistrationStatus.REGISTERED);
         assertThat(service.cancelRegistration(1L, b, a).getStatus()).isEqualTo(JobRegistrationStatus.CANCELLED);
     }
+
+    @Test
+    void aCloseReminderIsOnlyMarkedForAnOpenJobAndOnlyOnce() {
+        assertThat(service.markCloseReminderSent(1L, false)).isTrue();
+        assertThat(job.getCloseReminderSentDateTime()).isNotNull();
+        // already sent (e.g. by another instance)
+        assertThat(service.markCloseReminderSent(1L, false)).isFalse();
+
+        job.setStatus(JobStatus.COMPLETED);
+        assertThat(service.markCloseReminderSent(1L, true)).isFalse();
+        assertThat(job.getCloseReminder2SentDateTime()).isNull();
+    }
 }

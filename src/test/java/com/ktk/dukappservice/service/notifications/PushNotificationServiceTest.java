@@ -43,6 +43,7 @@ class PushNotificationServiceTest {
         job.setDescription("Takarítás");
         job.setJobDateTime(LocalDateTime.of(2026, 10, 10, 9, 0));
         when(jobService.findById(5L)).thenReturn(Optional.of(job));
+        when(jobService.markCloseReminderSent(anyLong(), anyBoolean())).thenReturn(true);
         when(pushService.send(anyCollection(), any(), any(), any(), anyMap())).thenReturn(new PushService.Result(1, 1, 1, 0));
         when(history.save(any())).thenAnswer(i -> i.getArgument(0));
     }
@@ -181,5 +182,29 @@ class PushNotificationServiceTest {
         when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(old));
         service.sendCloseReminders();
         verify(jobService, never()).markCloseReminderSent(anyLong(), anyBoolean());
+    }
+
+    @Test
+    void theTestNotificationGoesToEveryDeviceOfTheUser() {
+        com.ktk.dukappservice.data.users.User user = new com.ktk.dukappservice.data.users.User();
+        user.setId(9L);
+        List<DeviceToken> mine = List.of(device(9L, "a"), device(9L, "b"));
+        when(devices.findByUserId(9L)).thenReturn(mine);
+
+        service.sendTest(user);
+
+        verify(pushService).send(eq(mine), eq(NotificationType.GENERAL), eq("Teszt értesítés"), any(), anyMap());
+    }
+
+    @Test
+    void noReminderIsSentWhenTheJobWasClosedMeanwhile() {
+        Job j = overdueJob(LocalDateTime.now().minusMinutes(90));
+        when(jobService.findOverdueOpenJobs(any())).thenReturn(List.of(j));
+        // closed after the list was loaded: marking says no
+        when(jobService.markCloseReminderSent(7L, false)).thenReturn(false);
+
+        service.sendCloseReminders();
+
+        verify(pushService, never()).send(anyCollection(), any(), any(), any(), anyMap());
     }
 }

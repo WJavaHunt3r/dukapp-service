@@ -130,6 +130,10 @@ public class User extends BaseEntity<User, Long> {
     @Column(name = "BUFE_ID")
     private Long bufeId;
 
+    /** Secret in the user's calendar subscription link (see CalendarController); null until they ask for one. */
+    @Column(name = "CALENDAR_TOKEN", length = 64)
+    private String calendarToken;
+
     public String getFullName() {
         return lastname + " " + firstname;
     }

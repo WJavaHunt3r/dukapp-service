@@ -17,6 +17,12 @@ import com.ktk.dukappservice.enums.JobStatus;
 import com.ktk.dukappservice.mapper.ActivityMapper;
 import com.ktk.dukappservice.mapper.JobMapper;
 import com.ktk.dukappservice.service.notifications.PushNotificationService;
+import com.ktk.dukappservice.service.calendar.IcsCalendar;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,6 +57,12 @@ public class JobController {
     private final ActivityMapper activityMapper;
     private final PushNotificationService pushNotificationService;
     private final JobChatService jobChatService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.timezone:Europe/Budapest}")
+    private String timezone;
+
+    @org.springframework.beans.factory.annotation.Value("${app.webUrl:https://dukapp.bcc-ktk.org}")
+    private String webUrl;
 
     public JobController(JobService jobService, JobMapper jobMapper, UserService userService, ActivityMapper activityMapper,
                          PushNotificationService pushNotificationService, JobChatService jobChatService) {
@@ -135,6 +147,17 @@ public class JobController {
             j.setResponsible(responsible);
         });
         return ResponseEntity.ok(toDto(job, user));
+    }
+
+    /** One job as an .ics file, to import into any calendar. */
+    @GetMapping("/{id}/ics")
+    public ResponseEntity<?> getIcs(@PathVariable Long id) {
+        Job job = findJob(id);
+        String ics = IcsCalendar.calendar("DukApp", List.of(job), ZoneId.of(timezone), webUrl, LocalDateTime.now());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/calendar;charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"job-" + id + ".ics\"")
+                .body(ics.getBytes(StandardCharsets.UTF_8));
     }
 
     @PostMapping("/{id}/cancel")

@@ -25,6 +25,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByMyShareID(Long id);
 
+    Optional<User> findByCalendarToken(String calendarToken);
+
     /** The highest MyShare id within the range, null when there is none. */
     @Query("SELECT MAX(u.myShareID) FROM User u WHERE u.myShareID BETWEEN ?1 AND ?2")
     Long findMaxMyShareIdBetween(Long from, Long to);

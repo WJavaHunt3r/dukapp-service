@@ -109,6 +109,18 @@ public class UserController {
         return ResponseEntity.ok("Deletion request sent");
     }
 
+    /** The secret of the user's calendar subscription link (created on first use); the client builds the link. */
+    @GetMapping("/me/calendar-token")
+    public ResponseEntity<?> getCalendarToken(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(Map.of("token", userService.getOrCreateCalendarToken(userService.getCurrentUser(userDetails))));
+    }
+
+    /** Replaces the secret: the old link stops working. */
+    @PostMapping("/me/calendar-token/reset")
+    public ResponseEntity<?> resetCalendarToken(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(Map.of("token", userService.resetCalendarToken(userService.getCurrentUser(userDetails))));
+    }
+
     @GetMapping("/me/family")
     public ResponseEntity<?> getFamily(@AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> user = userService.findByUsername(userDetails.getUsername());

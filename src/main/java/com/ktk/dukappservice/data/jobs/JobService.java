@@ -328,6 +328,11 @@ public class JobService extends BaseService<Job, Long> {
         }
     }
 
+    /** The jobs the user is registered for that start at or after {@code from} (not cancelled), for their calendar. */
+    public List<Job> findRegisteredJobs(Long userId, LocalDateTime from) {
+        return registrations.findJobsOf(userId, from);
+    }
+
     /** When the job is over: its end, or its start for jobs without an end time. */
     public static LocalDateTime endOf(Job job) {
         return job.getJobEndDateTime() != null ? job.getJobEndDateTime() : job.getJobDateTime();
@@ -338,16 +343,28 @@ public class JobService extends BaseService<Job, Long> {
         return repository.findOverdueOpen(JobStatus.OPEN, endBefore);
     }
 
-    /** Records a close reminder as sent ({@code second} = the one on the next day), so it is never sent twice. */
+    /**
+     * Records a close reminder as sent ({@code second} = the one on the next day) under the job's lock, and says
+     * whether it should be sent. False when the job is no longer open (closed or cancelled since the caller looked)
+     * or the reminder was already sent (e.g. by another running instance), so a reminder is never sent for a closed
+     * job and never twice.
+     */
     @Transactional
-    public void markCloseReminderSent(Long jobId, boolean second) {
+    public boolean markCloseReminderSent(Long jobId, boolean second) {
         Job job = lock(jobId);
+        if (job.getStatus() != JobStatus.OPEN) {
+            return false;
+        }
+        if (second ? job.getCloseReminder2SentDateTime() != null : job.getCloseReminderSentDateTime() != null) {
+            return false;
+        }
         if (second) {
             job.setCloseReminder2SentDateTime(LocalDateTime.now());
         } else {
             job.setCloseReminderSentDateTime(LocalDateTime.now());
         }
         save(job);
+        return true;
     }
 
     /** Open jobs whose "new job" notification should go out now. */

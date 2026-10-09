@@ -28,6 +28,10 @@ import java.util.*;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
+    private static final long TEST_COOLDOWN_MS = 10_000;
+    /** When each user last sent a test, so the button can't be used to flood their own devices. */
+    private final java.util.concurrent.ConcurrentHashMap<Long, Long> lastTest = new java.util.concurrent.ConcurrentHashMap<>();
+
     private final UserService userService;
     private final AppRoleService appRoleService;
     private final DeviceTokenService deviceTokenService;
@@ -63,6 +67,18 @@ public class NotificationController {
     public ResponseEntity<?> unregisterDevice(@RequestParam("token") String token, @AuthenticationPrincipal UserDetails userDetails) {
         boolean removed = deviceTokenService.unregister(userService.getCurrentUser(userDetails), token);
         return removed ? ResponseEntity.ok("Device unregistered") : ResponseEntity.status(404).body("Device not found");
+    }
+
+    /** Sends a test push to all of the current user's devices, to find out whether notifications reach them. */
+    @PostMapping("/test")
+    public ResponseEntity<?> sendTest(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getCurrentUser(userDetails);
+        long now = System.currentTimeMillis();
+        Long last = lastTest.put(user.getId(), now);
+        if (last != null && now - last < TEST_COOLDOWN_MS) {
+            return ResponseEntity.status(429).body("Please wait a few seconds before sending another test.");
+        }
+        return ResponseEntity.ok(pushNotificationService.sendTest(user));
     }
 
     // ---------------------------------------------------------------- preferences (current user)

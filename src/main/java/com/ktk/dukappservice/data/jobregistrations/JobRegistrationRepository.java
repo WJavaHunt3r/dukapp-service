@@ -18,6 +18,11 @@ public interface JobRegistrationRepository extends JpaRepository<JobRegistration
 
     List<JobRegistration> findByJobIdInAndUserId(Collection<Long> jobIds, Long userId);
 
+    /** The jobs the user is registered for that haven't been cancelled and start at or after {@code from}. */
+    @Query("SELECT r.job FROM JobRegistration r WHERE r.user.id = ?1 AND r.status = ?2 AND r.job.status <> ?3 AND r.job.jobDateTime >= ?4 ORDER BY r.job.jobDateTime")
+    List<com.ktk.dukappservice.data.jobs.Job> findJobsOf(Long userId, JobRegistrationStatus status,
+                                                          com.ktk.dukappservice.enums.JobStatus excluded, java.time.LocalDateTime from);
+
     long countByJobIdAndStatus(Long jobId, JobRegistrationStatus status);
 
     /** Rows of {jobId, status, count} for the given statuses. */

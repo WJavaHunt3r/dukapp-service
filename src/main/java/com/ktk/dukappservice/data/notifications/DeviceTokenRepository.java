@@ -26,6 +26,9 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
 
     Optional<DeviceToken> findByToken(String token);
 
+    /** All devices of the user, whatever they switched off (for the test notification). */
+    List<DeviceToken> findByUserId(Long userId);
+
     @Query("SELECT t FROM DeviceToken t JOIN FETCH t.user u WHERE u.id IN :userIds AND " + NOT_DISABLED)
     List<DeviceToken> findForUsers(@Param("userIds") Collection<Long> userIds, @Param("type") NotificationType type);
 

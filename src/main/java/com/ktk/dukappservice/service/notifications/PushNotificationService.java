@@ -100,6 +100,15 @@ public class PushNotificationService {
         }));
     }
 
+    /**
+     * Sends a test notification to every device of the user, even if they switched notification types off, and tells
+     * how many devices got it. Synchronous, so the caller can show the result.
+     */
+    public PushService.Result sendTest(User user) {
+        NotificationTexts.Text text = NotificationTexts.test();
+        return pushService.send(deviceTokenRepository.findByUserId(user.getId()), NotificationType.GENERAL, text.title(), text.body(), Map.of());
+    }
+
     /** Someone was added to the chat of a job without being registered: they get told, whatever they muted before. */
     public void addedToChat(Long jobId, Long targetId, User actor) {
         inBackground("added to chat " + jobId, () -> jobService.findById(jobId).ifPresent(job -> {
@@ -136,7 +145,10 @@ public class PushNotificationService {
             } else {
                 continue;
             }
-            jobService.markCloseReminderSent(job.getId(), second);
+            // Decided on the job as it is now (under its lock), not as it was when the list was loaded
+            if (!jobService.markCloseReminderSent(job.getId(), second)) {
+                continue;
+            }
             NotificationTexts.Text text = NotificationTexts.jobNotClosed(job, second);
             pushService.send(deviceTokenRepository.findForUsers(List.of(job.getResponsible().getId()), NotificationType.JOB_NOT_CLOSED),
                     NotificationType.JOB_NOT_CLOSED, text.title(), text.body(), jobData(job));
